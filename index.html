@@ -2,7 +2,12 @@
 <html lang="tr" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <!-- Android tablet için daha sağlıklı viewport (pinch-zoom açık) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#871918" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+
   <title>Çiğ Köfteci Mahsum Usta | Yönetim Paneli</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
@@ -28,7 +33,7 @@
       --text:#fbfbfc;
       --muted:rgba(251,251,252,.65);
 
-      --accent:#f5d0cd;   /* yumuşak vurgu (fiyat vb.) */
+      --accent:#f5d0cd;
       --success:#22c55e;
       --warning:#f59e0b;
       --danger:#ef4444;
@@ -61,7 +66,11 @@
       background:var(--bg);
       color:var(--text);
       overflow-x:hidden;
+      -webkit-tap-highlight-color: transparent; /* Android dokunma highlight azalt */
     }
+
+    /* Android dokunma için: yanlışlıkla zoom/çift tık davranışını azaltır */
+    button, .btn, .nav-item, .chip, .channel-btn, .product { touch-action: manipulation; }
 
     .hidden{display:none !important}
     .row{display:flex; gap:10px; align-items:center}
@@ -275,7 +284,7 @@
       justify-content:center;
       gap:8px;
 
-      height:40px;            /* sabit yükseklik */
+      height:40px;
       padding:0 14px;
 
       border-radius:999px;
@@ -288,7 +297,7 @@
       font-size:13px;
       white-space:nowrap;
 
-      line-height:1;          /* emoji baseline zıplamasını keser */
+      line-height:1;
       vertical-align:middle;
     }
     .chip:hover,.channel-btn:hover{transform:translateY(-1px); background:rgba(255,255,255,.05);}
@@ -521,12 +530,20 @@
         <div class="muted" style="font-size:11px;">
           Seçili Şube: <b id="currentBranchName">| Hastane Şubesi</b>
         </div>
+        <!-- Veri kaynağı (hangi localStorage key'inden okundu) -->
+        <div class="muted" style="font-size:11px;">
+          Veri Kaynağı: <b id="dataSourceLabel">-</b>
+        </div>
       </div>
     </aside>
 
     <main class="main">
       <div class="topbar">
-        <h1>Çiğ Köfteci Mahsum Usta <span id="topHint">| Hızlı Yönetim</span></h1>
+        <h1>
+          Çiğ Köfteci Mahsum Usta
+          <span id="topHint">| Hızlı Yönetim</span>
+          <span id="dataSourceTop" style="font-size:12px; color:var(--muted); font-weight:600; margin-left:8px;"></span>
+        </h1>
         <div class="row">
           <button class="btn" type="button" onclick="toggleSidebar()">☰ Menü</button>
         </div>
@@ -827,10 +844,192 @@
     </main>
   </div>
 
+  <!-- =========================
+       ŞUBE ÜRÜNLERİ (JSON)
+       Bu listeler DEFAULTS'e aktarılıyor.
+       ========================= -->
+
+  <!-- Şube 1: Hastane Şubesi Ürünleri -->
+  <script type="application/json" id="branchHastaneProducts">
+  [
+    {"id": 1, "name": "Dürüm 90gr", "cat": "Dürümler", "price": 60, "stock": 100, "icon": "🌯", "description": "Normal boy dürüm"},
+    {"id": 2, "name": "Mega Dürüm 130gr", "cat": "Dürümler", "price": 90, "stock": 80, "icon": "🌯", "description": "Mega boy dürüm"},
+    {"id": 3, "name": "Ultra Mega Dürüm 160gr", "cat": "Dürümler", "price": 110, "stock": 60, "icon": "🌯", "description": "Ultra mega boy dürüm"},
+    {"id": 4, "name": "Duble Dürüm 190gr", "cat": "Dürümler", "price": 135, "stock": 40, "icon": "🌯", "description": "Duble boy dürüm"},
+
+    {"id": 5, "name": "Doritos (Normal Dürüm)", "cat": "Ek Paketler", "price": 15, "stock": 200, "icon": "🌮", "description": "Normal dürüme eklenir"},
+    {"id": 6, "name": "Doritos (Büyük Dürüm)", "cat": "Ek Paketler", "price": 20, "stock": 200, "icon": "🌮", "description": "Mega, Ultra Mega, Duble dürümlere eklenir"},
+
+    {"id": 7, "name": "250 gr Porsiyon", "cat": "Porsiyonlar", "price": 90, "stock": 50, "icon": "🥙", "description": "Küçük porsiyon"},
+    {"id": 8, "name": "350 gr Porsiyon", "cat": "Porsiyonlar", "price": 115, "stock": 40, "icon": "🥙", "description": "Orta porsiyon"},
+    {"id": 9, "name": "500 gr Porsiyon", "cat": "Porsiyonlar", "price": 150, "stock": 30, "icon": "🥙", "description": "Büyük porsiyon"},
+    {"id": 10, "name": "750 gr Porsiyon", "cat": "Porsiyonlar", "price": 225, "stock": 20, "icon": "🥙", "description": "Çok büyük porsiyon"},
+    {"id": 11, "name": "1 kg Porsiyon", "cat": "Porsiyonlar", "price": 300, "stock": 15, "icon": "🥙", "description": "Aile boy porsiyon"},
+
+    {"id": 12, "name": "Küçük Yeşilik", "cat": "Ek Paketler", "price": 20, "stock": 80, "icon": "🥗", "description": "Küçük yeşillik paketi"},
+    {"id": 13, "name": "Büyük Yeşilik", "cat": "Ek Paketler", "price": 35, "stock": 60, "icon": "🥗", "description": "Büyük yeşillik paketi"},
+    {"id": 14, "name": "Turşu Paketi", "cat": "Ek Paketler", "price": 35, "stock": 50, "icon": "🥒", "description": "Karışık turşu paketi"},
+    {"id": 15, "name": "2 Lavaş", "cat": "Ek Paketler", "price": 8, "stock": 150, "icon": "🫓", "description": "2 adet lavaş ekmeği"},
+
+    {"id": 16, "name": "Su 500ml", "cat": "İçecekler", "price": 10, "stock": 300, "icon": "💧", "description": "Şişe su"},
+    {"id": 17, "name": "Küçük Ayran", "cat": "İçecekler", "price": 20, "stock": 200, "icon": "🥛", "description": "200ml ayran"},
+    {"id": 18, "name": "Büyük Ayran", "cat": "İçecekler", "price": 25, "stock": 150, "icon": "🥛", "description": "330ml ayran"},
+    {"id": 19, "name": "1 Lt Kola", "cat": "İçecekler", "price": 30, "stock": 100, "icon": "🥤", "description": "1 litre kola"},
+    {"id": 20, "name": "2.5 Lt Kola", "cat": "İçecekler", "price": 50, "stock": 80, "icon": "🥤", "description": "2.5 litre kola"},
+    {"id": 21, "name": "Cam Şişe Kola", "cat": "İçecekler", "price": 25, "stock": 120, "icon": "🥤", "description": "250ml cam şişe kola"},
+    {"id": 22, "name": "Cam Şişe Fanta", "cat": "İçecekler", "price": 25, "stock": 120, "icon": "🥤", "description": "250ml cam şişe fanta"},
+    {"id": 23, "name": "Şalgam 330ml", "cat": "İçecekler", "price": 20, "stock": 100, "icon": "🧃", "description": "Küçük şalgam"},
+    {"id": 24, "name": "1 Lt Şalgam", "cat": "İçecekler", "price": 40, "stock": 60, "icon": "🧃", "description": "1 litre şalgam"},
+    {"id": 25, "name": "Limonata", "cat": "İçecekler", "price": 25, "stock": 80, "icon": "🍋", "description": "Taze limonata"}
+  ]
+  </script>
+
+  <!-- Şube 2: Cihanpol Şubesi Ürünleri -->
+  <script type="application/json" id="branchCihanpolProducts">
+  [
+    {"id": 1, "name": "Dürüm 90gr", "cat": "Dürümler", "price": 60, "stock": 80, "icon": "🌯", "description": "Normal boy dürüm"},
+    {"id": 2, "name": "Mega Dürüm 130gr", "cat": "Dürümler", "price": 90, "stock": 60, "icon": "🌯", "description": "Mega boy dürüm"},
+    {"id": 3, "name": "Ultra Mega Dürüm 160gr", "cat": "Dürümler", "price": 110, "stock": 40, "icon": "🌯", "description": "Ultra mega boy dürüm"},
+    {"id": 4, "name": "Duble Dürüm 190gr", "cat": "Dürümler", "price": 135, "stock": 30, "icon": "🌯", "description": "Duble boy dürüm"},
+
+    {"id": 5, "name": "Doritos (Normal Dürüm)", "cat": "Ek Paketler", "price": 15, "stock": 150, "icon": "🌮", "description": "Normal dürüme eklenir"},
+    {"id": 6, "name": "Doritos (Büyük Dürüm)", "cat": "Ek Paketler", "price": 20, "stock": 150, "icon": "🌮", "description": "Mega, Ultra Mega, Duble dürümlere eklenir"},
+
+    {"id": 7, "name": "250 gr Porsiyon", "cat": "Porsiyonlar", "price": 90, "stock": 40, "icon": "🥙", "description": "Küçük porsiyon"},
+    {"id": 8, "name": "350 gr Porsiyon", "cat": "Porsiyonlar", "price": 115, "stock": 30, "icon": "🥙", "description": "Orta porsiyon"},
+    {"id": 9, "name": "500 gr Porsiyon", "cat": "Porsiyonlar", "price": 150, "stock": 20, "icon": "🥙", "description": "Büyük porsiyon"},
+    {"id": 10, "name": "750 gr Porsiyon", "cat": "Porsiyonlar", "price": 225, "stock": 15, "icon": "🥙", "description": "Çok büyük porsiyon"},
+    {"id": 11, "name": "1 kg Porsiyon", "cat": "Porsiyonlar", "price": 300, "stock": 10, "icon": "🥙", "description": "Aile boy porsiyon"},
+
+    {"id": 12, "name": "Küçük Yeşilik", "cat": "Ek Paketler", "price": 20, "stock": 80, "icon": "🥗", "description": "Küçük yeşillik paketi"},
+    {"id": 13, "name": "Büyük Yeşilik", "cat": "Ek Paketler", "price": 35, "stock": 60, "icon": "🥗", "description": "Büyük yeşillik paketi"},
+    {"id": 14, "name": "Turşu Paketi", "cat": "Ek Paketler", "price": 35, "stock": 50, "icon": "🥒", "description": "Karışık turşu paketi"},
+    {"id": 15, "name": "2 Lavaş", "cat": "Ek Paketler", "price": 8, "stock": 150, "icon": "🫓", "description": "2 adet lavaş ekmeği"},
+
+    {"id": 16, "name": "Su 500ml", "cat": "İçecekler", "price": 10, "stock": 200, "icon": "💧", "description": "Şişe su"},
+    {"id": 17, "name": "Küçük Ayran", "cat": "İçecekler", "price": 20, "stock": 150, "icon": "🥛", "description": "200ml ayran"},
+    {"id": 18, "name": "Büyük Ayran", "cat": "İçecekler", "price": 25, "stock": 100, "icon": "🥛", "description": "330ml ayran"},
+    {"id": 19, "name": "1 Lt Kola", "cat": "İçecekler", "price": 30, "stock": 80, "icon": "🥤", "description": "1 litre kola"},
+    {"id": 20, "name": "2.5 Lt Kola", "cat": "İçecekler", "price": 50, "stock": 60, "icon": "🥤", "description": "2.5 litre kola"},
+    {"id": 21, "name": "Cam Şişe Kola", "cat": "İçecekler", "price": 25, "stock": 100, "icon": "🥤", "description": "250ml cam şişe kola"},
+    {"id": 22, "name": "Cam Şişe Fanta", "cat": "İçecekler", "price": 25, "stock": 100, "icon": "🥤", "description": "250ml cam şişe fanta"},
+    {"id": 23, "name": "Şalgam 330ml", "cat": "İçecekler", "price": 20, "stock": 80, "icon": "🧃", "description": "Küçük şalgam"},
+    {"id": 24, "name": "1 Lt Şalgam", "cat": "İçecekler", "price": 40, "stock": 50, "icon": "🧃", "description": "1 litre şalgam"},
+    {"id": 25, "name": "Limonata", "cat": "İçecekler", "price": 25, "stock": 60, "icon": "🍋", "description": "Taze limonata"}
+  ]
+  </script>
+
+  <script>
+    /* ========= ANDROID TABLET / PWA (tek dosyada) =========
+       - Manifest’i runtime’da oluşturur
+       - Basit offline cache service worker’ı runtime’da oluşturup register eder
+       Not: Tam PWA deneyimi için ideal olan sw.js + manifest.json ayrı dosyadır.
+    */
+    (function setupPWA(){
+      try{
+        // Manifest (blob)
+        var manifest = {
+          name: "Mahsum Usta Yönetim",
+          short_name: "MahsumUsta",
+          start_url: ".",
+          display: "standalone",
+          background_color: "#0f0b0b",
+          theme_color: "#871918",
+          icons: [
+            { src: "logo.png", sizes: "192x192", type: "image/png" },
+            { src: "logo.png", sizes: "512x512", type: "image/png" }
+          ]
+        };
+        var manifestBlob = new Blob([JSON.stringify(manifest)], {type:"application/json"});
+        var manifestUrl = URL.createObjectURL(manifestBlob);
+        var link = document.createElement("link");
+        link.rel = "manifest";
+        link.href = manifestUrl;
+        document.head.appendChild(link);
+
+        // Service worker (blob) - cache-first, basit
+        if('serviceWorker' in navigator){
+          var swCode = `
+            const CACHE = "mahsum-usta-cache-v1";
+            self.addEventListener("install", (e) => {
+              e.waitUntil(
+                caches.open(CACHE).then(c => c.addAll(["./"]))
+              );
+              self.skipWaiting();
+            });
+            self.addEventListener("activate", (e) => {
+              e.waitUntil(self.clients.claim());
+            });
+            self.addEventListener("fetch", (e) => {
+              const req = e.request;
+              // sadece GET
+              if(req.method !== "GET") return;
+              e.respondWith(
+                caches.match(req).then(hit => {
+                  return hit || fetch(req).then(res => {
+                    const copy = res.clone();
+                    caches.open(CACHE).then(c => c.put(req, copy)).catch(()=>{});
+                    return res;
+                  }).catch(() => hit);
+                })
+              );
+            });
+          `;
+          var swBlob = new Blob([swCode], {type:"text/javascript"});
+          var swUrl = URL.createObjectURL(swBlob);
+          navigator.serviceWorker.register(swUrl).catch(()=>{});
+        }
+      }catch(e){}
+    })();
+  </script>
+
   <script>
     /* ========= STORAGE ========= */
     var STORAGE_KEY = 'MAHSUM_USTA_APP_V5';
     var THEME_KEY = 'MAHSUM_USTA_THEME';
+
+    /* ========= KAYNAK DEBUG ========= */
+    var dataSourceKey = null; // hangi localStorage key’inden okundu
+
+    function updateDataSourceLabels(){
+      var k = dataSourceKey ? dataSourceKey : STORAGE_KEY;
+
+      var el1 = document.getElementById('dataSourceLabel');
+      if(el1) el1.textContent = k;
+
+      var el2 = document.getElementById('dataSourceTop');
+      if(el2) el2.textContent = '| Veri: ' + k;
+    }
+
+    /* ========= DEFAULT PRODUCTS FROM JSON SCRIPTS ========= */
+    function readProductsFromScript(id){
+      try{
+        var el = document.getElementById(id);
+        if(!el) return [];
+        var txt = (el.textContent || '').trim();
+        if(!txt) return [];
+        var arr = JSON.parse(txt);
+        if(!Array.isArray(arr)) return [];
+        // Normalize fields just in case
+        for(var i=0;i<arr.length;i++){
+          var p = arr[i] || {};
+          p.id = Number(p.id) || (Date.now() + Math.floor(Math.random()*100000));
+          p.name = p.name || 'Ürün';
+          p.cat = p.cat || 'Dürümler';
+          p.price = Number(p.price) || 0;
+          p.stock = Number(p.stock) || 0;
+          if(typeof p.icon === 'undefined') p.icon = '';
+          if(typeof p.description === 'undefined') p.description = '';
+          arr[i] = p;
+        }
+        return arr;
+      }catch(e){
+        return [];
+      }
+    }
+
+    var DEFAULT_HASTANE_PRODUCTS = readProductsFromScript('branchHastaneProducts');
+    var DEFAULT_CIHANPOL_PRODUCTS = readProductsFromScript('branchCihanpolProducts');
 
     /* ========= DEFAULTS ========= */
     var DEFAULTS = {
@@ -840,27 +1039,13 @@
       branches: {
         hastane: {
           name: 'Hastane Şubesi',
-          products: [
-            {id:101, name:'Dürüm (Normal)', description:'Standart dürüm', price:90, stock:120, cat:'Dürümler', icon:'🌯'},
-            {id:102, name:'Dürüm (Mega)', description:'Büyük boy', price:120, stock:90, cat:'Dürümler', icon:'🌯'},
-            {id:201, name:'Porsiyon', description:'Tabakta servis', price:130, stock:80, cat:'Porsiyonlar', icon:'🥙'},
-            {id:301, name:'Ayran', description:'200 ml', price:20, stock:200, cat:'İçecekler', icon:'🥛'},
-            {id:302, name:'Kola', description:'330 ml', price:35, stock:150, cat:'İçecekler', icon:'🥤'},
-            {id:401, name:'Ek Nar Ekşisi', description:'', price:10, stock:300, cat:'Ek Paketler', icon:'🧀'}
-          ],
+          products: DEFAULT_HASTANE_PRODUCTS.length ? DEFAULT_HASTANE_PRODUCTS : [],
           sales: [],
           expenses: []
         },
         cihanpol: {
           name: 'Cihanpol Şubesi',
-          products: [
-            {id:111, name:'Dürüm (Normal)', description:'Standart dürüm', price:90, stock:100, cat:'Dürümler', icon:'🌯'},
-            {id:112, name:'Dürüm (Mega)', description:'Büyük boy', price:120, stock:70, cat:'Dürümler', icon:'🌯'},
-            {id:211, name:'Porsiyon', description:'Tabakta servis', price:130, stock:60, cat:'Porsiyonlar', icon:'🥙'},
-            {id:311, name:'Ayran', description:'200 ml', price:20, stock:180, cat:'İçecekler', icon:'🥛'},
-            {id:312, name:'Kola', description:'330 ml', price:35, stock:120, cat:'İçecekler', icon:'🥤'},
-            {id:411, name:'Ek Nar Ekşisi', description:'', price:10, stock:250, cat:'Ek Paketler', icon:'🧀'}
-          ],
+          products: DEFAULT_CIHANPOL_PRODUCTS.length ? DEFAULT_CIHANPOL_PRODUCTS : [],
           sales: [],
           expenses: []
         }
@@ -884,7 +1069,7 @@
       bindBranchSelect();
       bindBackup();
       bindTheme();
-      bindPOSDelegates(); // kategori/kanal click handler (kayma + güvenli)
+      bindPOSDelegates();
 
       // Expense date default today
       var ed = document.getElementById('expenseDate');
@@ -894,6 +1079,8 @@
       renderAll();
       refreshBranchLabel();
       setPayMethod('nakit');
+
+      updateDataSourceLabels();
     })();
 
     /* ========= UI BINDINGS ========= */
@@ -948,7 +1135,8 @@
         refreshBranchLabel();
         cart = [];
         activeCat = 'Hepsi';
-        activeChannel = 'Dükkan İçi';
+        // Eğer kanallar değiştiyse güvenli fallback
+        activeChannel = (state.salesChannels && state.salesChannels[0]) ? state.salesChannels[0] : 'Dükkan İçi';
         setPayMethod('nakit');
         renderAll();
         save();
@@ -997,8 +1185,12 @@
 
               cart = [];
               activeCat = 'Hepsi';
-              activeChannel = 'Dükkan İçi';
+              activeChannel = (state.salesChannels && state.salesChannels[0]) ? state.salesChannels[0] : 'Dükkan İçi';
               setPayMethod('nakit');
+
+              // Yedek yüklendi -> kaynak artık yeni key
+              dataSourceKey = STORAGE_KEY;
+              updateDataSourceLabels();
 
               save(true);
               renderSelectors();
@@ -1055,7 +1247,7 @@
           var el = ev.target;
           while(el && el !== channelButtons && !el.classList.contains('channel-btn')) el = el.parentNode;
           if(!el || el === channelButtons) return;
-          var ch = el.getAttribute('data-channel') || 'Dükkan İçi';
+          var ch = el.getAttribute('data-channel') || (state.salesChannels && state.salesChannels[0]) || 'Dükkan İçi';
           setActiveChannel(ch);
         });
       }
@@ -1074,7 +1266,9 @@
     function save(silent){
       try{
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        dataSourceKey = STORAGE_KEY;
         if(!silent) showSaveStatus('Kaydedildi', 'success');
+        updateDataSourceLabels();
         return true;
       }catch(e){
         if(!silent) showSaveStatus('Kaydetme hatası!', 'error');
@@ -1166,12 +1360,7 @@
       return t;
     }
 
-    /* ========= DATA NORMALIZE + OLD PRODUCTS BACKFILL ========= */
-    function isValidState(obj){
-      return obj && obj.branches && obj.branches.hastane && obj.branches.cihanpol
-        && obj.branches.hastane.products && obj.branches.cihanpol.products;
-    }
-
+    /* ========= DATA NORMALIZE + BACKFILL ========= */
     function sanitizeBranch(b){
       if(!b) return;
       b.products = b.products || [];
@@ -1191,7 +1380,7 @@
     }
 
     function mergeProductsById(targetProducts, defaultProducts){
-      // target içinde default yoksa ekle
+      // target içinde default yoksa ekle (id bazlı)
       var map = {};
       for(var i=0;i<targetProducts.length;i++){
         map[String(targetProducts[i].id)] = true;
@@ -1206,21 +1395,18 @@
     }
 
     function normalizeAndBackfill(obj){
-      // listeler yoksa default
       if(!obj.categories) obj.categories = deepClone(DEFAULTS.categories);
       if(!obj.expenseTypes) obj.expenseTypes = deepClone(DEFAULTS.expenseTypes);
       if(!obj.salesChannels) obj.salesChannels = deepClone(DEFAULTS.salesChannels);
 
-      // branch yoksa default
       if(!obj.branches) obj.branches = deepClone(DEFAULTS.branches);
       if(!obj.branches.hastane) obj.branches.hastane = deepClone(DEFAULTS.branches.hastane);
       if(!obj.branches.cihanpol) obj.branches.cihanpol = deepClone(DEFAULTS.branches.cihanpol);
 
-      // sanitize
       sanitizeBranch(obj.branches.hastane);
       sanitizeBranch(obj.branches.cihanpol);
 
-      // DEFAULTS ürünleri geri ekle (id bazlı)
+      // Yeni default ürünleri ekle (mevcut ürünleri silmez / bozmaz)
       mergeProductsById(obj.branches.hastane.products, DEFAULTS.branches.hastane.products);
       mergeProductsById(obj.branches.cihanpol.products, DEFAULTS.branches.cihanpol.products);
 
@@ -1228,7 +1414,7 @@
     }
 
     function findBestOldStateInLocalStorage(){
-      // Amaç: eski key'i bilmeden, localStorage içinden branches/products yapısını taşıyan en iyi state'i bulmak
+      // Eski key'i bilmeden, localStorage içinden branches/products yapısını taşıyan en iyi state'i bul
       var best = null;
       var bestScore = -1;
 
@@ -1245,7 +1431,6 @@
             var obj = JSON.parse(raw);
             if(!obj || !obj.branches) continue;
 
-            // farklı yapıları da yakalamak için esnek kontrol
             var h = obj.branches.hastane;
             var c = obj.branches.cihanpol;
             if(!h || !c) continue;
@@ -1256,14 +1441,14 @@
 
             if(score > bestScore){
               bestScore = score;
+              obj._sourceKey = k; // hangi key’den geldi (debug için)
               best = obj;
             }
-          }catch(e2){
-            // ignore
-          }
+          }catch(e2){}
         }
       }catch(e){}
 
+      if(best) dataSourceKey = best._sourceKey || null;
       return best;
     }
 
@@ -1274,7 +1459,9 @@
         if(raw){
           var obj = JSON.parse(raw);
           if(obj && obj.branches){
-            return normalizeAndBackfill(obj);
+            dataSourceKey = STORAGE_KEY;
+            obj = normalizeAndBackfill(obj);
+            return obj;
           }
         }
 
@@ -1282,18 +1469,23 @@
         var old = findBestOldStateInLocalStorage();
         if(old && old.branches){
           old = normalizeAndBackfill(old);
-          // yeni key'e taşı
           try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(old)); }catch(e){}
-          // kullanıcıya küçük bilgi
           setTimeout(function(){
             showSaveStatus('Eski veriler geri yüklendi', 'success');
           }, 200);
+
+          // artık yeni key’e taşındı; ama kaynağı göstermek için eski key’i dataSourceKey’de bırakıyoruz
+          updateDataSourceLabels();
           return old;
         }
 
         // 3) hiç yoksa defaults
+        dataSourceKey = STORAGE_KEY;
+        updateDataSourceLabels();
         return deepClone(DEFAULTS);
       }catch(e){
+        dataSourceKey = STORAGE_KEY;
+        updateDataSourceLabels();
         return deepClone(DEFAULTS);
       }
     }
@@ -1820,7 +2012,7 @@
       if(!sale || !saleDraft || !saleOriginalSnapshot) return;
 
       var newMethod = getVal('editSaleMethod') || 'nakit';
-      var newChannel = getVal('editSaleChannel') || 'Dükkan İçi';
+      var newChannel = getVal('editSaleChannel') || (state.salesChannels && state.salesChannels[0]) || 'Dükkan İçi';
 
       // 1) eski satışın stok etkisini geri al
       for(var i=0;i<saleOriginalSnapshot.items.length;i++){
@@ -2147,6 +2339,13 @@
         alert('Yedek hatası: ' + e);
       }
     }
+
+    /* ========= KODDA TESPİT EDİLEN MANTIK RİSKLERİ (düzeltilmiş/önlem alınmış) =========
+       1) Branch değişince activeChannel sabit 'Dükkan İçi' idi: kanallar değişirse boş kalabiliyordu -> ilk kanal fallback eklendi.
+       2) Veri kaynağı görünürlüğü yoktu -> dataSourceKey + label’lar eklendi.
+       3) Default ürün listeleri kod içine hardcoded idi -> JSON script’lerden DEFAULTS’e otomatik aktarım eklendi.
+       4) Android/tablet: user-scalable kapalıydı -> daha güvenli viewport + touch-action + tap highlight azaltma + PWA/offline (tek dosyada) eklendi.
+    */
   </script>
 </body>
 </html>
