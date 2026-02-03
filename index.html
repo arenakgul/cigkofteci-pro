@@ -1030,7 +1030,7 @@
     var THEME_KEY = 'MAHSUM_USTA_THEME';
 
     // ====== GOOGLE SHEETS LIVE SYNC CONFIG ======
- var SHEETS_SYNC = {
+var SHEETS_SYNC = {
   enabled: true,
   clientId: '475033237170-hmk421hd221h2ubdu26svt4sgv3709gn.apps.googleusercontent.com',
   spreadsheetId: '14KIWt8HFT-CoYAsyWpBa1YNrMlay2_UKQqBdKMfo4Ck',
@@ -2119,14 +2119,14 @@
       b.expenses.push(expObj);
 
       if(SheetsSync && SheetsSync.isReady()){
-        SheetsSync.logExpense(getBranchKey(), expObj);
-      }
+  SheetsSync.logExpense(getBranchKey(), expObj);
+}
 
-      save();
-      resetExpenseForm();
-      renderAll();
-      alert('Gider eklendi!');
-    }
+save();
+resetExpenseForm();
+renderAll();
+alert('Gider eklendi!');
+
 
     function deleteExpense(id){
       if(!confirm('Gideri silmek istiyor musunuz?')) return;
@@ -2536,7 +2536,7 @@
         }, 2500);
       }
 
-     return {
+return {
   init: init,
   isReady: function(){ return !!tokenClient; },
   connect: function(){
@@ -2549,6 +2549,7 @@
   logSale: logSale,
   logExpense: logExpense
 };
+
     })();
 
     // GIS onload callback
