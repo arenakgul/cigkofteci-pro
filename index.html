@@ -1030,15 +1030,14 @@
     var THEME_KEY = 'MAHSUM_USTA_THEME';
 
     // ====== GOOGLE SHEETS LIVE SYNC CONFIG ======
-    var SHEETS_SYNC = {
-      enabled: true,
-      clientId: '475033237170-hmk421hd221h2ubdu26svt4sgv3709gn.apps.googleusercontent.com',
-      spreadsheetId: '14KIWt8HFT-CoYAsyWpBa1YNrMlay2_UKQqBdKMfo4Ck',
-      range: 'State!A2:D2',
-      scope: 'https://www.googleapis.com/auth/spreadsheets'
-      opsAppendRange: 'Ops!A:H',
-
-    };
+ var SHEETS_SYNC = {
+  enabled: true,
+  clientId: '475033237170-hmk421hd221h2ubdu26svt4sgv3709gn.apps.googleusercontent.com',
+  spreadsheetId: '14KIWt8HFT-CoYAsyWpBa1YNrMlay2_UKQqBdKMfo4Ck',
+  range: 'State!A2:D2',
+  opsAppendRange: 'Ops!A:H',
+  scope: 'https://www.googleapis.com/auth/spreadsheets'
+};
 
     // Varsayılanlar
     var DEFAULTS = {
@@ -2124,8 +2123,6 @@
       }
 
       save();
-
-      save();
       resetExpenseForm();
       renderAll();
       alert('Gider eklendi!');
@@ -2539,19 +2536,19 @@
         }, 2500);
       }
 
-      return {
-        init: init,
-        isReady: function(){ return !!tokenClient; },
-        connect: function(){
-          requestTokenInteractive();
-          startAutoPull();
-        },
-        pull: pull,
-        push: push,
-        pushDebounced: pushDebounced
-        logSale: logSale,
-        logExpense: logExpense
-      };
+     return {
+  init: init,
+  isReady: function(){ return !!tokenClient; },
+  connect: function(){
+    requestTokenInteractive();
+    startAutoPull();
+  },
+  pull: pull,
+  push: push,
+  pushDebounced: pushDebounced,
+  logSale: logSale,
+  logExpense: logExpense
+};
     })();
 
     // GIS onload callback
