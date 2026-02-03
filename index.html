@@ -11,7 +11,8 @@
   <title>Çiğ Köfteci Mahsum Usta | Yönetim Paneli</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-  <style>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
     :root{
       --font:"Inter",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       --r:18px;
@@ -34,6 +35,9 @@
       --muted:rgba(251,251,252,.65);
 
       --accent:#f5d0cd;
+      --price:#ffd166;
+      --price-bg:rgba(255,209,102,.16);
+      --price-bd:rgba(255,209,102,.35);
       --success:#22c55e;
       --warning:#f59e0b;
       --danger:#ef4444;
@@ -52,6 +56,10 @@
 
       --text:#140b0b;
       --muted:rgba(20,11,11,.62);
+
+      --price:#b45309;
+      --price-bg:rgba(180,83,9,.12);
+      --price-bd:rgba(180,83,9,.22);
 
       --shadow:0 12px 35px rgba(15,20,25,.10);
       --shadow2:0 10px 22px rgba(15,20,25,.08);
@@ -78,7 +86,8 @@
     .pill{border-radius:999px}
 
     /* Layout */
-    .app{display:flex; min-height:100vh;}
+    .app{display:flex; min-height:100vh;
+      height:100dvh;}
     .main{flex:1; padding:16px; min-width:0;}
 
     /* Sidebar */
@@ -90,6 +99,7 @@
       position:sticky;
       top:0;
       height:100vh;
+      height:100dvh;
       display:flex;
       flex-direction:column;
       gap:14px;
@@ -226,6 +236,7 @@
       align-items:center;
       justify-content:space-between;
       gap:10px;
+      flex-wrap:wrap;
       box-shadow:var(--shadow2);
       margin-bottom:14px;
     }
@@ -324,7 +335,7 @@
     /* POS grid: 4 columns */
     .product-grid{
       display:grid;
-      grid-template-columns:repeat(4, minmax(0,1fr));
+      grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));
       gap:12px;
       margin-top:10px;
     }
@@ -354,7 +365,26 @@
       font-size:22px;
       flex:0 0 auto;
     }
-    .price{font-weight:900; color:var(--accent); margin-top:4px;}
+    .pname{
+      display:block;
+      font-size:clamp(.95rem, 2.8vw, 1.05rem);
+      line-height:1.15;
+      font-weight:900;
+      word-break:break-word;
+    }
+    .price{
+      font-weight:950;
+      color:var(--price);
+      margin-top:6px;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:4px 10px;
+      border-radius:999px;
+      background:var(--price-bg);
+      border:1px solid var(--price-bd);
+      width:fit-content;
+    }
     .stock{font-size:12px; color:var(--muted); margin-top:6px;}
 
     /* Cart */
@@ -378,11 +408,11 @@
       padding-top:12px; margin-top:12px;
       border-top:1px solid var(--border);
     }
-    .cart-total{font-size:18px; font-weight:900;}
+    .cart-total{font-size:18px; font-weight:950; color:var(--price);}
     .pay-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;}
 
     /* Cards */
-    .cards{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:12px;}
+    .cards{display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:12px;}
     .card{
       background:var(--panel);
       border:1px solid var(--border);
@@ -392,6 +422,11 @@
     }
     .card .label{font-size:12px; color:var(--muted)}
     .card .value{font-size:20px; font-weight:950; margin-top:6px;}
+    /* Para değerlerini daha belirgin yap */
+    #repTurnover{color:var(--price);}
+    #repExpense{color:var(--warning);}
+    #repNet{color:var(--success);}
+
 
     /* Tables */
     table{
@@ -447,9 +482,25 @@
       flex-wrap:wrap;
     }
 
+    /* Mobile sidebar overlay */
+    .sb-overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.45);
+      z-index:998;
+    }
+
+    /* iOS input zoom engeli + mobil rahatlık */
+    @media (max-width: 560px){
+      select,input,textarea{font-size:16px;}
+      .product{padding:12px; min-height:74px; align-items:flex-start;}
+      .pico{width:42px; height:42px; border-radius:14px; font-size:20px;}
+      .main{padding:12px; padding-bottom:calc(12px + env(safe-area-inset-bottom));}
+      .topbar{position:sticky; top:8px; z-index:60;}
+    }
     /* Responsive */
     @media (max-width: 1180px){
-      .product-grid{grid-template-columns:repeat(3, minmax(0,1fr));}
+      .product-grid{grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));}
       .content-grid{grid-template-columns:1.4fr 1fr;}
     }
     @media (max-width: 980px){
@@ -463,6 +514,7 @@
         left:-320px;
         top:0;
         height:100vh;
+      height:100dvh;
         z-index:999;
         transition:var(--t);
         box-shadow:var(--shadow);
@@ -471,7 +523,7 @@
       .main{padding:12px;}
     }
     @media (max-width: 560px){
-      .product-grid{grid-template-columns:repeat(2, minmax(0,1fr));}
+      .product-grid{grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));}
     }
     @media (max-width: 420px){
       .product-grid{grid-template-columns:1fr;}
@@ -524,6 +576,17 @@
           <button class="btn btn-primary" id="manualSaveBtn" type="button">💾 Yedek Al</button>
           <button class="btn" id="loadBackupBtn" type="button">📥 Yedeği Yükle</button>
           <button class="btn" id="themeToggle" type="button" title="Tema">🌙</button>
+        <div class="box" style="margin-top:10px;">
+          <div class="muted" style="font-size:12px; margin-bottom:8px;">Canlı Senkron (Google Sheets)</div>
+          <div class="row" style="justify-content:space-between; flex-wrap:wrap; gap:10px;">
+            <button class="btn btn-primary" id="btnGoogleAuth" type="button">🔐 Google Bağlan</button>
+            <div class="muted" id="syncStatus" style="font-size:12px;">Bağlı değil</div>
+          </div>
+          <div class="muted" id="syncInfo" style="font-size:11px; margin-top:8px; line-height:1.4;">
+            İnternet gelince otomatik senkron (son yazan kazanır).
+          </div>
+        </div>
+
         </div>
         <input id="backupFileInput" type="file" accept="application/json" class="hidden">
         <div id="saveStatus"></div>
@@ -536,6 +599,8 @@
         </div>
       </div>
     </aside>
+
+    <div id="sbOverlay" class="sb-overlay hidden" onclick="toggleSidebar(true)"></div>
 
     <main class="main">
       <div class="topbar">
@@ -988,6 +1053,189 @@
     var STORAGE_KEY = 'MAHSUM_USTA_APP_V5';
     var THEME_KEY = 'MAHSUM_USTA_THEME';
 
+
+
+    /* ========= GOOGLE SHEETS LIVE SYNC (Snapshot) =========
+       - Bu yöntem "tek satır state" kullanır: State!A2:D2
+       - Client secret TARAYICIYA KONMAZ. Sadece Client ID kullanılır.
+       - Çakışma çözümü: son yazan kazanır.
+    */
+    var LIVE_SYNC = {
+      enabled: true,
+      clientId: "475033237170-hmk421hd221h2ubdu26svt4sgv3709gn.apps.googleusercontent.com",
+      spreadsheetId: "14KIWt8HFT-CoYAsyWpBa1YNrMlay2_UKQqBdKMfo4Ck",
+      range: "State!A2:D2",
+      scope: "https://www.googleapis.com/auth/spreadsheets"
+    };
+
+    var liveDeviceIdKey = "MAHSUM_USTA_DEVICE_ID";
+    var liveLastRevKey  = "MAHSUM_USTA_LIVE_LAST_REV";
+    var liveDeviceId = (localStorage.getItem(liveDeviceIdKey) || ("dev_"+Date.now()+"_"+Math.floor(Math.random()*1e9)));
+    localStorage.setItem(liveDeviceIdKey, liveDeviceId);
+    var liveLastRev = Number(localStorage.getItem(liveLastRevKey) || 0);
+
+    var liveTokenClient = null;
+    var liveAccessToken = null;
+    var liveIsApplyingRemote = false;
+    var livePushTimer = null;
+    var livePullTimer = null;
+
+    function liveSetStatus(txt, ok){
+      var s = document.getElementById("syncStatus");
+      if(s){ s.textContent = txt; s.style.color = ok ? "var(--success)" : "var(--muted)"; }
+    }
+    function liveSetInfo(txt){
+      var i = document.getElementById("syncInfo");
+      if(i) i.textContent = txt;
+    }
+    function liveUpdateAuthButton(){
+      var b = document.getElementById("btnGoogleAuth");
+      if(!b) return;
+      if(liveAccessToken){
+        b.textContent = "🔓 Çıkış";
+        b.classList.remove("btn-primary");
+        b.classList.add("btn-warning");
+        liveSetStatus("Bağlı", true);
+      }else{
+        b.textContent = "🔐 Google Bağlan";
+        b.classList.add("btn-primary");
+        b.classList.remove("btn-warning");
+        liveSetStatus("Bağlı değil", false);
+      }
+    }
+
+    function liveInitGoogle(){
+      if(!window.google || !google.accounts || !google.accounts.oauth2) return;
+      liveTokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: LIVE_SYNC.clientId,
+        scope: LIVE_SYNC.scope,
+        callback: function(resp){}
+      });
+      liveUpdateAuthButton();
+    }
+
+    function liveRequestToken(interactive, cb){
+      if(!liveTokenClient){ alert("Google auth hazır değil"); return; }
+      liveTokenClient.callback = function(resp){
+        if(resp && resp.error){
+          console.warn(resp);
+          liveAccessToken = null;
+          liveUpdateAuthButton();
+          liveSetInfo("Giriş hatası: " + resp.error);
+          return;
+        }
+        liveAccessToken = resp.access_token;
+        liveUpdateAuthButton();
+        liveSetInfo("Bağlandı • Canlı senkron aktif");
+        cb && cb();
+      };
+      liveTokenClient.requestAccessToken({ prompt: interactive ? "consent" : "" });
+    }
+
+    function liveSignOut(){
+      if(!liveAccessToken) return;
+      try{ google.accounts.oauth2.revoke(liveAccessToken, function(){}); }catch(e){}
+      liveAccessToken = null;
+      liveUpdateAuthButton();
+      liveSetInfo("Çıkış yapıldı • Yerel veri duruyor");
+    }
+
+    function liveSheetsFetch(url, opt){
+      opt = opt || {};
+      opt.headers = opt.headers || {};
+      opt.headers["Authorization"] = "Bearer " + liveAccessToken;
+      return fetch(url, opt).then(function(r){
+        if(!r.ok) throw new Error("Sheets API hata: " + r.status);
+        return r.json();
+      });
+    }
+
+    function livePushStateDebounced(){
+      if(!LIVE_SYNC.enabled) return;
+      if(liveIsApplyingRemote) return;
+      if(!liveAccessToken) return;
+      if(!navigator.onLine) return;
+      if(livePushTimer) clearTimeout(livePushTimer);
+      livePushTimer = setTimeout(livePushState, 700);
+    }
+
+    function livePushState(){
+      if(!LIVE_SYNC.enabled) return;
+      if(liveIsApplyingRemote) return;
+      if(!liveAccessToken) return;
+      if(!navigator.onLine) return;
+
+      var rev = Date.now();
+      var updatedAt = new Date().toISOString();
+      var payload = JSON.stringify(state);
+
+      var url = "https://sheets.googleapis.com/v4/spreadsheets/" + LIVE_SYNC.spreadsheetId +
+        "/values/" + encodeURIComponent(LIVE_SYNC.range) + "?valueInputOption=RAW";
+
+      var body = {
+        range: LIVE_SYNC.range,
+        majorDimension: "ROWS",
+        values: [[ String(rev), updatedAt, liveDeviceId, payload ]]
+      };
+
+      liveSheetsFetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      }).then(function(){
+        liveLastRev = rev;
+        localStorage.setItem(liveLastRevKey, String(liveLastRev));
+        liveSetInfo("Gönderildi • " + updatedAt);
+      }).catch(function(err){
+        console.warn(err);
+        liveSetInfo("Gönderme hatası (internet/izin/limit) • tekrar deneyecek");
+      });
+    }
+
+    function livePullState(){
+      if(!LIVE_SYNC.enabled) return;
+      if(!liveAccessToken) return;
+      if(!navigator.onLine) return;
+      if(document.hidden) return;
+
+      var url = "https://sheets.googleapis.com/v4/spreadsheets/" + LIVE_SYNC.spreadsheetId +
+        "/values/" + encodeURIComponent(LIVE_SYNC.range) + "?majorDimension=ROWS";
+
+      liveSheetsFetch(url).then(function(data){
+        var row = (data && data.values && data.values[0]) ? data.values[0] : null;
+        if(!row || row.length < 4) return;
+
+        var rev = Number(row[0] || 0);
+        if(rev <= liveLastRev) return;
+
+        var remoteJson = row[3] || "";
+        var remoteState = null;
+        try{ remoteState = JSON.parse(remoteJson); }catch(e){ remoteState = null; }
+        if(!remoteState) return;
+
+        liveIsApplyingRemote = true;
+        state = normalizeAndBackfill(remoteState);
+        save(true); // local'e yaz; save() içinde liveIsApplyingRemote ile push engelleniyor
+        renderAll();
+        refreshBranchLabel();
+        liveIsApplyingRemote = false;
+
+        liveLastRev = rev;
+        localStorage.setItem(liveLastRevKey, String(liveLastRev));
+
+        var who = row[2] || "";
+        var ts = row[1] || "";
+        liveSetInfo("Alındı • " + ts + (who ? (" • " + who) : ""));
+      }).catch(function(err){ console.warn(err); });
+    }
+
+    function liveStartPolling(){
+      if(livePullTimer) clearInterval(livePullTimer);
+      livePullTimer = setInterval(livePullState, 2500);
+      window.addEventListener("online", function(){ livePullState(); livePushStateDebounced(); });
+      document.addEventListener("visibilitychange", function(){ if(!document.hidden) livePullState(); });
+    }
+
     /* ========= KAYNAK DEBUG ========= */
     var dataSourceKey = null; // hangi localStorage key’inden okundu
 
@@ -1065,10 +1313,28 @@
 
     /* ========= INIT ========= */
     (function init(){
+      // Google Sheets live sync
+      liveInitGoogle();
+      liveStartPolling();
+
       bindNav();
       bindBranchSelect();
       bindBackup();
       bindTheme();
+
+      var gbtn = document.getElementById('btnGoogleAuth');
+      if(gbtn){
+        gbtn.onclick = function(){
+          if(liveAccessToken){
+            if(confirm('Google bağlantısını kapatmak istiyor musun? (Yerel veri silinmez)')) liveSignOut();
+            return;
+          }
+          liveRequestToken(true, function(){
+            livePullState();
+            livePushStateDebounced();
+          });
+        };
+      }
       bindPOSDelegates();
 
       // Expense date default today
@@ -1084,11 +1350,24 @@
     })();
 
     /* ========= UI BINDINGS ========= */
-    function toggleSidebar(){
+    function toggleSidebar(forceClose){
       var sb = document.getElementById('sidebar');
+      var ov = document.getElementById('sbOverlay');
       if(!sb) return;
-      if(sb.classList.contains('open')) sb.classList.remove('open');
-      else sb.classList.add('open');
+
+      var open = sb.classList.contains('open');
+      var shouldOpen = !open;
+
+      if(forceClose === true) shouldOpen = false;
+      if(forceClose === false) shouldOpen = true;
+
+      if(shouldOpen){
+        sb.classList.add('open');
+        if(ov) ov.classList.remove('hidden');
+      }else{
+        sb.classList.remove('open');
+        if(ov) ov.classList.add('hidden');
+      }
     }
 
     function bindNav(){
@@ -1098,8 +1377,7 @@
           var view = this.getAttribute('data-view');
           switchView(view);
           if(window.innerWidth <= 840){
-            var sb = document.getElementById('sidebar');
-            if(sb) sb.classList.remove('open');
+            toggleSidebar(true);
           }
         });
       }
@@ -1343,6 +1621,19 @@
       }
       return null;
     }
+
+    function productUsedInAnySale(branch, pid){
+      if(!branch || !branch.sales) return false;
+      for(var i=0;i<branch.sales.length;i++){
+        var s = branch.sales[i];
+        if(!s || !s.items) continue;
+        for(var j=0;j<s.items.length;j++){
+          if(Number(s.items[j].id)===Number(pid)) return true;
+        }
+      }
+      return false;
+    }
+
 
     function findSale(sales, id){
       for(var i=0;i<sales.length;i++){
@@ -1613,7 +1904,7 @@
           + '<div class="product" data-pid="'+Number(p.id)+'">'
           +   '<div class="pico">'+esc(p.icon || getCategoryIcon(p.cat))+'</div>'
           +   '<div style="min-width:0;">'
-          +     '<b style="font-size:1.05rem;">'+esc(p.name)+'</b>'
+          +     '<b class="pname">'+esc(p.name)+'</b>'
           +     (p.description ? '<div style="font-size:.8rem; color:var(--muted); margin:5px 0;">'+esc(p.description)+'</div>' : '')
           +     '<div class="price">'+Number(p.price).toFixed(2)+' ₺</div>'
           +     '<div class="stock">'+esc(stockText)+'</div>'
@@ -2025,7 +2316,16 @@
       for(i=0;i<saleDraft.items.length;i++){
         var ni = saleDraft.items[i];
         var p2 = findProduct(b.products, ni.id);
-        if(!p2){ alert('Ürün bulunamadı: '+ni.name); return; }
+        if(!p2){
+          // fail-safe: eskiyi tekrar düş (az önce geri verdiğimiz stokları geri al)
+          for(var j=0;j<saleOriginalSnapshot.items.length;j++){
+            var oi2 = saleOriginalSnapshot.items[j];
+            var pp = findProduct(b.products, oi2.id);
+            if(pp) pp.stock = (Number(pp.stock)||0) - (Number(oi2.qty)||0);
+          }
+          alert('Ürün bulunamadı: '+ni.name+' (Bu ürün geçmişte silinmiş olabilir)');
+          return;
+        }
         var st = Number(p2.stock)||0;
         if(Number(ni.qty) > st){
           // fail-safe: eskiyi tekrar düş
@@ -2168,8 +2468,13 @@
     }
 
     function deleteProduct(id){
-      if(!confirm('Ürünü silmek istiyor musunuz?')) return;
       var b = getBranch();
+      if(productUsedInAnySale(b, id)){
+        alert('Bu ürün geçmiş satışlarda kullanıldığı için silinemez.\nİstersen stok/fiyatı 0 yapıp gizleyebilirsin.');
+        return;
+      }
+      if(!confirm('Ürünü silmek istiyor musunuz?')) return;
+
       for(var i=0;i<b.products.length;i++){
         if(Number(b.products[i].id)===Number(id)){
           b.products.splice(i,1);
