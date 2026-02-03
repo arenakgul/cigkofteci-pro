@@ -2331,6 +2331,100 @@ alert('Gider eklendi!');
       var pullTimer = null;
 
       function nowIso(){ return new Date().toISOString(); }
+      // --- TOKEN PERSIST / AUTO-RECONNECT (sessionStorage + silent refresh) ---
+      var SESSION_TOKEN_KEY = 'SHEETS_ACCESS_TOKEN';
+      var SESSION_TOKEN_EXP_KEY = 'SHEETS_ACCESS_TOKEN_EXP';
+      var HAS_CONNECTED_KEY = 'SHEETS_HAS_CONNECTED';
+
+      var pendingTokenResolve = null;
+      var pendingTokenReject = null;
+      var tokenPurpose = null; // 'init' | 'interactive' | 'refresh'
+      var suppressInitAutoConnect = false;
+
+
+      function clearSessionToken(){
+        accessToken = null;
+        try{
+          sessionStorage.removeItem(SESSION_TOKEN_KEY);
+          sessionStorage.removeItem(SESSION_TOKEN_EXP_KEY);
+        }catch(e){}
+      }
+
+      function storeSessionToken(token, expiresInSec){
+        try{
+          sessionStorage.setItem(SESSION_TOKEN_KEY, token);
+          if(expiresInSec){
+            // 60 sn tampon (çok kritik: token bitmeden yenileyelim)
+            var exp = Date.now() + (Number(expiresInSec)*1000) - 60000;
+            sessionStorage.setItem(SESSION_TOKEN_EXP_KEY, String(exp));
+          }
+          localStorage.setItem(HAS_CONNECTED_KEY, '1'); // kullanıcı en az 1 kez bağlandı
+        }catch(e){}
+      }
+
+      function restoreSessionToken(){
+        try{
+          var tok = sessionStorage.getItem(SESSION_TOKEN_KEY);
+          var exp = Number(sessionStorage.getItem(SESSION_TOKEN_EXP_KEY) || 0);
+          if(tok && (!exp || exp > Date.now())){
+            accessToken = tok;
+            pill('sync-ok','✅ Bağlandı');
+            setLast(nowIso());
+            // sayfa yenilemede otomatik devam
+            startAutoPull();
+            // token varsa bir kez çekelim
+            pull();
+            setTimeout(flushOpsQueue, 300);
+            return true;
+          }
+        }catch(e){}
+        return false;
+      }
+
+      function requestToken(opts, purpose){
+        if(!tokenClient){
+          suppressInitAutoConnect = true;
+          init();
+          suppressInitAutoConnect = false;
+          if(!tokenClient) return Promise.reject(new Error('NO_TOKEN_CLIENT'));
+        }
+        // aynı anda birden fazla token istemeyelim
+        if(pendingTokenResolve) return new Promise(function(resolve, reject){
+          // mevcut isteğin sonucu gelince aynı sonucu paylaş
+          var prevResolve = pendingTokenResolve;
+          var prevReject = pendingTokenReject;
+          pendingTokenResolve = function(tok){ try{ prevResolve(tok); }catch(e){} resolve(tok); };
+          pendingTokenReject = function(err){ try{ prevReject(err); }catch(e){} reject(err); };
+        });
+
+        tokenPurpose = purpose || 'interactive';
+
+        return new Promise(function(resolve, reject){
+          pendingTokenResolve = resolve;
+          pendingTokenReject = reject;
+          try{
+            tokenClient.requestAccessToken(opts || {});
+          }catch(e){
+            pendingTokenResolve = null;
+            pendingTokenReject = null;
+            tokenPurpose = null;
+            reject(e);
+          }
+        });
+      }
+
+      function requestTokenSilent(){
+        return requestToken({prompt:''}, 'init');
+      }
+
+      function requestTokenRefresh(){
+        return requestToken({prompt:''}, 'refresh');
+      }
+
+      function requestTokenInteractive(){
+        return requestToken({prompt:'consent'}, 'interactive');
+      }
+
 
       function pill(cls, txt){
         var el = document.getElementById('syncPill');
@@ -2370,42 +2464,101 @@ alert('Gider eklendi!');
             client_id: SHEETS_SYNC.clientId,
             scope: SHEETS_SYNC.scope,
             callback: function(resp){
+              // Başarılı token
               if(resp && resp.access_token){
                 accessToken = resp.access_token;
+
+                // token'ı sayfa yenilemede kaybetmemek için sessionStorage'a yaz
+                storeSessionToken(accessToken, resp.expires_in);
+
                 pill('sync-ok','✅ Bağlandı');
                 setLast(nowIso());
-                // bağlanınca otomatik bir pull
-                pull();
-                    setTimeout(flushOpsQueue, 300);
 
+                // otomatik çek + kuyruğu boşalt
+                if(tokenPurpose !== 'refresh'){
+                  pull();
+                  setTimeout(flushOpsQueue, 300);
+                }
+
+                // auto-pull devam etsin
+                startAutoPull();
+
+                // bekleyen promise varsa çözelim
+                if(pendingTokenResolve){
+                  try{ pendingTokenResolve(accessToken); }catch(e){}
+                }
               }else{
-                pill('sync-bad','❌ Token alınamadı');
+                // Hata/iptal
+                if(tokenPurpose === 'refresh'){
+                  clearSessionToken();
+                }
+                pill('sync-warn','🔐 Bağlan');
+
+                if(pendingTokenReject){
+                  try{ pendingTokenReject(resp || new Error('TOKEN_ERROR')); }catch(e){}
+                }
               }
+
+              // cleanup
+              pendingTokenResolve = null;
+              pendingTokenReject = null;
+              tokenPurpose = null;
             }
           });
-          pill('sync-warn','🔐 Bağlan');
+          // sayfa yenilemede token'ı geri yükle / sessiz tekrar bağlan
+          if(!restoreSessionToken()){
+            if(!suppressInitAutoConnect && localStorage.getItem(HAS_CONNECTED_KEY)==='1'){
+              pill('sync-warn','⏳ Google bağlanıyor…');
+              requestTokenSilent().catch(function(){ /* sessiz olmazsa kullanıcı tıklar */ });
+              // auto-pull connect ile zaten başlayacak
+              startAutoPull();
+            }else{
+              pill('sync-warn','🔐 Bağlan');
+            }
+          }
         }catch(e){
           pill('sync-bad','❌ Auth init hata');
         }
       }
-
-      function requestTokenInteractive(){
-        if(!tokenClient){
-          init();
-          if(!tokenClient) return;
-        }
-        tokenClient.requestAccessToken({prompt:'consent'});
-      }
+      // requestTokenInteractive artık yukarıda Promise'li olarak tanımlı
 
       function sheetsFetch(url, opt){
         opt = opt || {};
         opt.headers = opt.headers || {};
-        opt.headers['Authorization'] = 'Bearer ' + accessToken;
-        return fetch(url, opt).then(function(r){
-          if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+' '+t); });
+
+        if(!accessToken){
+          return Promise.reject(new Error('NO_TOKEN'));
+        }
+
+        function doFetch(){
+          opt.headers['Authorization'] = 'Bearer ' + accessToken;
+          return fetch(url, opt);
+        }
+
+        function handleOk(r){
+          if(!r.ok){
+            return r.text().then(function(t){
+              throw new Error('HTTP ' + r.status + ' ' + t);
+            });
+          }
           return r.json();
+        }
+
+        return doFetch().then(function(r){
+          // Token süresi bitti -> 1 kez sessiz yenile ve yeniden dene
+          if(r.status === 401){
+            clearSessionToken();
+            return requestTokenRefresh().then(function(){
+              return doFetch();
+            }).then(handleOk).catch(function(err){
+              pill('sync-warn','🔐 Bağlan');
+              throw err;
+            });
+          }
+          return handleOk(r);
         });
       }
+
 
        // ---- OPS APPEND (satır ekleme) ----
       var opsQueue = [];
