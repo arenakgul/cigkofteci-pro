@@ -1036,6 +1036,8 @@
       spreadsheetId: '14KIWt8HFT-CoYAsyWpBa1YNrMlay2_UKQqBdKMfo4Ck',
       range: 'State!A2:D2',
       scope: 'https://www.googleapis.com/auth/spreadsheets'
+      opsAppendRange: 'Ops!A:H',
+
     };
 
     // Varsayılanlar
@@ -1600,7 +1602,9 @@
         channel: activeChannel
       };
       b.sales.push(sale);
-
+      if(SheetsSync && SheetsSync.isReady()){
+        SheetsSync.logSale(getBranchKey(), sale);
+      }
       save();
       cart = [];
       renderPOS();
@@ -2106,13 +2110,20 @@
       if(!type){ alert('Tip seç'); return; }
       if(!amount || amount<=0){ alert('Tutar gir'); return; }
 
-      b.expenses.push({
+        var expObj = {
         id:newId(),
         date:date,
         type:type,
         desc:desc,
         amount:amount
-      });
+      };
+      b.expenses.push(expObj);
+
+      if(SheetsSync && SheetsSync.isReady()){
+        SheetsSync.logExpense(getBranchKey(), expObj);
+      }
+
+      save();
 
       save();
       resetExpenseForm();
@@ -2312,6 +2323,8 @@
                 setLast(nowIso());
                 // bağlanınca otomatik bir pull
                 pull();
+                    setTimeout(flushOpsQueue, 300);
+
               }else{
                 pill('sync-bad','❌ Token alınamadı');
               }
@@ -2338,6 +2351,95 @@
         return fetch(url, opt).then(function(r){
           if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+' '+t); });
           return r.json();
+        });
+      }
+
+       // ---- OPS APPEND (satır ekleme) ----
+      var opsQueue = [];
+      try { opsQueue = JSON.parse(localStorage.getItem('SHEETS_OPS_QUEUE') || '[]') || []; } catch(e){ opsQueue = []; }
+
+      function saveOpsQueue(){
+        try{ localStorage.setItem('SHEETS_OPS_QUEUE', JSON.stringify(opsQueue)); }catch(e){}
+      }
+      function enqueueOpRow(row){
+        opsQueue.push(row);
+        saveOpsQueue();
+      }
+
+      function appendOpsRows(rows){
+        var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + encodeURIComponent(SHEETS_SYNC.spreadsheetId)
+          + '/values/' + encodeURIComponent(SHEETS_SYNC.opsAppendRange) + ':append'
+          + '?valueInputOption=RAW&insertDataOption=INSERT_ROWS';
+
+        return sheetsFetch(url, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ majorDimension:'ROWS', values: rows })
+        });
+      }
+
+      function flushOpsQueue(){
+        if(!accessToken) return;
+        if(!opsQueue.length) return;
+
+        var batch = opsQueue.slice();
+        opsQueue = [];
+        saveOpsQueue();
+
+        appendOpsRows(batch).then(function(){
+          setLast(nowIso());
+        }).catch(function(err){
+          console.warn(err);
+          // geri koy (kaybolmasın)
+          opsQueue = batch.concat(opsQueue);
+          saveOpsQueue();
+        });
+      }
+
+      function logSale(branchKey, sale){
+        // timestamp, branch, type=sale, saleId, total, channel, method, itemsJson
+        var row = [
+          nowIso(),
+          String(branchKey || ''),
+          'sale',
+          String(sale.id || ''),
+          String(Number(sale.total || 0).toFixed(2)),
+          String(sale.channel || ''),
+          String(sale.method || ''),
+          JSON.stringify(sale.items || [])
+        ];
+
+        if(!accessToken){ enqueueOpRow(row); pill('sync-warn','🔐 Bağlan'); return; }
+
+        appendOpsRows([row]).then(function(){
+          setLast(nowIso());
+        }).catch(function(err){
+          console.warn(err);
+          enqueueOpRow(row);
+        });
+      }
+
+      function logExpense(branchKey, exp){
+        // timestamp, branch, type=expense, expenseId, amount, typeName, desc
+        // H sütunu boş bırakıyoruz
+        var row = [
+          nowIso(),
+          String(branchKey || ''),
+          'expense',
+          String(exp.id || ''),
+          String(Number(exp.amount || 0).toFixed(2)),
+          String(exp.type || ''),
+          String(exp.desc || ''),
+          ''
+        ];
+
+        if(!accessToken){ enqueueOpRow(row); pill('sync-warn','🔐 Bağlan'); return; }
+
+        appendOpsRows([row]).then(function(){
+          setLast(nowIso());
+        }).catch(function(err){
+          console.warn(err);
+          enqueueOpRow(row);
         });
       }
 
@@ -2447,6 +2549,8 @@
         pull: pull,
         push: push,
         pushDebounced: pushDebounced
+        logSale: logSale,
+        logExpense: logExpense
       };
     })();
 
