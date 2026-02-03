@@ -245,13 +245,39 @@
       gap:10px;
     }
 
-    /* Chips */
-    .chipbar{display:flex; flex-wrap:wrap; gap:8px;}
-    .chip, .channel-btn{
-      display:inline-flex;
+    /* === Kategori/Kanal Barı: kayma fix === */
+    .category-scroll{
+      display:flex;
       align-items:center;
       gap:8px;
-      padding:9px 12px;
+
+      flex-wrap:nowrap;
+      overflow-x:auto;
+      overflow-y:hidden;
+      white-space:nowrap;
+
+      -webkit-overflow-scrolling:touch;
+      scrollbar-gutter:stable;
+      padding:2px 2px 8px 2px;
+    }
+    .category-scroll::-webkit-scrollbar{height:8px}
+    .category-scroll::-webkit-scrollbar-thumb{
+      background:rgba(255,255,255,.18);
+      border-radius:999px;
+    }
+    .category-scroll::-webkit-scrollbar-track{background:transparent}
+
+    /* Chips */
+    .chip, .channel-btn{
+      flex:0 0 auto;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+
+      height:40px;            /* sabit yükseklik */
+      padding:0 14px;
+
       border-radius:999px;
       border:1px solid var(--border);
       background:rgba(255,255,255,.03);
@@ -261,6 +287,9 @@
       user-select:none;
       font-size:13px;
       white-space:nowrap;
+
+      line-height:1;          /* emoji baseline zıplamasını keser */
+      vertical-align:middle;
     }
     .chip:hover,.channel-btn:hover{transform:translateY(-1px); background:rgba(255,255,255,.05);}
     .chip.active,.channel-btn.active{
@@ -446,7 +475,6 @@
     <aside class="sidebar" id="sidebar">
       <div class="brand">
         <div class="logo" title="Logo">
-          <!-- logo.png aynı klasörde olmalı -->
           <img src="logo.png" alt="Çiğ Köfteci Mahsum Usta">
         </div>
         <div>
@@ -516,11 +544,11 @@
             <div class="pos-tools">
               <div style="flex:1; min-width:220px;">
                 <div class="muted" style="font-size:12px; margin-bottom:6px;">Kategori</div>
-                <div class="chipbar" id="catBar"></div>
+                <div class="category-scroll" id="catBar"></div>
               </div>
               <div style="flex:1; min-width:220px;">
                 <div class="muted" style="font-size:12px; margin-bottom:6px;">Satış Kanalı</div>
-                <div class="chipbar" id="channelButtons"></div>
+                <div class="category-scroll" id="channelButtons"></div>
               </div>
             </div>
 
@@ -740,7 +768,7 @@
 
             <div class="box" style="margin-top:12px;">
               <div class="muted" style="font-size:12px; margin-bottom:8px;">Gider Tipleri</div>
-              <div class="chipbar" id="expTypeList"></div>
+              <div class="category-scroll" id="expTypeList" style="padding-bottom:2px;"></div>
             </div>
           </div>
 
@@ -856,6 +884,7 @@
       bindBranchSelect();
       bindBackup();
       bindTheme();
+      bindPOSDelegates(); // kategori/kanal click handler (kayma + güvenli)
 
       // Expense date default today
       var ed = document.getElementById('expenseDate');
@@ -957,13 +986,15 @@
           reader.onload = function(){
             try{
               var obj = JSON.parse(String(reader.result||''));
-              if(!obj || !obj.branches || !obj.categories){
+              if(!obj || !obj.branches){
                 alert('Geçersiz yedek dosyası!');
                 return;
               }
               if(!confirm('Yedeği yüklemek mevcut verileri değiştirecek. Devam edilsin mi?')) return;
 
               state = obj;
+              normalizeAndBackfill(state);
+
               cart = [];
               activeCat = 'Hepsi';
               activeChannel = 'Dükkan İçi';
@@ -996,7 +1027,6 @@
         });
       }
 
-      // load theme
       try{
         var t = localStorage.getItem(THEME_KEY);
         if(t === 'light' || t === 'dark'){
@@ -1004,6 +1034,31 @@
           if(btn) btn.textContent = (t === 'dark') ? '🌙' : '☀️';
         }
       }catch(e){}
+    }
+
+    function bindPOSDelegates(){
+      var catBar = document.getElementById('catBar');
+      var channelButtons = document.getElementById('channelButtons');
+
+      if(catBar){
+        catBar.addEventListener('click', function(ev){
+          var el = ev.target;
+          while(el && el !== catBar && !el.classList.contains('chip')) el = el.parentNode;
+          if(!el || el === catBar) return;
+          var c = el.getAttribute('data-cat') || 'Hepsi';
+          filterCat(c);
+        });
+      }
+
+      if(channelButtons){
+        channelButtons.addEventListener('click', function(ev){
+          var el = ev.target;
+          while(el && el !== channelButtons && !el.classList.contains('channel-btn')) el = el.parentNode;
+          if(!el || el === channelButtons) return;
+          var ch = el.getAttribute('data-channel') || 'Dükkan İçi';
+          setActiveChannel(ch);
+        });
+      }
     }
 
     /* ========= HELPERS ========= */
@@ -1024,47 +1079,6 @@
       }catch(e){
         if(!silent) showSaveStatus('Kaydetme hatası!', 'error');
         return false;
-      }
-    }
-
-    function loadStateOrDefault(){
-      try{
-        var raw = localStorage.getItem(STORAGE_KEY);
-        if(!raw) return deepClone(DEFAULTS);
-        var obj = JSON.parse(raw);
-        if(!obj || !obj.branches) return deepClone(DEFAULTS);
-
-        // Güvenli merge: kategori/kanal/tip listeleri yoksa defaulttan al
-        if(!obj.categories) obj.categories = deepClone(DEFAULTS.categories);
-        if(!obj.expenseTypes) obj.expenseTypes = deepClone(DEFAULTS.expenseTypes);
-        if(!obj.salesChannels) obj.salesChannels = deepClone(DEFAULTS.salesChannels);
-
-        // Branch eksikleri varsa ekle
-        if(!obj.branches.hastane) obj.branches.hastane = deepClone(DEFAULTS.branches.hastane);
-        if(!obj.branches.cihanpol) obj.branches.cihanpol = deepClone(DEFAULTS.branches.cihanpol);
-
-        // Ürünlerde id çakışmaları / eksikler için güvenlik
-        sanitizeBranch(obj.branches.hastane);
-        sanitizeBranch(obj.branches.cihanpol);
-
-        return obj;
-      }catch(e){
-        return deepClone(DEFAULTS);
-      }
-    }
-
-    function sanitizeBranch(b){
-      if(!b) return;
-      b.products = b.products || [];
-      b.sales = b.sales || [];
-      b.expenses = b.expenses || [];
-      for(var i=0;i<b.products.length;i++){
-        var p = b.products[i];
-        if(!p) continue;
-        p.id = Number(p.id) || (Date.now() + Math.floor(Math.random()*100000));
-        p.price = Number(p.price) || 0;
-        p.stock = Number(p.stock) || 0;
-        p.cat = p.cat || 'Dürümler';
       }
     }
 
@@ -1152,9 +1166,140 @@
       return t;
     }
 
+    /* ========= DATA NORMALIZE + OLD PRODUCTS BACKFILL ========= */
+    function isValidState(obj){
+      return obj && obj.branches && obj.branches.hastane && obj.branches.cihanpol
+        && obj.branches.hastane.products && obj.branches.cihanpol.products;
+    }
+
+    function sanitizeBranch(b){
+      if(!b) return;
+      b.products = b.products || [];
+      b.sales = b.sales || [];
+      b.expenses = b.expenses || [];
+      for(var i=0;i<b.products.length;i++){
+        var p = b.products[i];
+        if(!p) continue;
+        p.id = Number(p.id) || (Date.now() + Math.floor(Math.random()*100000));
+        p.price = Number(p.price) || 0;
+        p.stock = Number(p.stock) || 0;
+        p.cat = p.cat || 'Dürümler';
+        p.name = p.name || 'Ürün';
+        if(typeof p.description === 'undefined') p.description = '';
+        if(typeof p.icon === 'undefined') p.icon = '';
+      }
+    }
+
+    function mergeProductsById(targetProducts, defaultProducts){
+      // target içinde default yoksa ekle
+      var map = {};
+      for(var i=0;i<targetProducts.length;i++){
+        map[String(targetProducts[i].id)] = true;
+      }
+      for(i=0;i<defaultProducts.length;i++){
+        var dp = defaultProducts[i];
+        if(!dp) continue;
+        if(!map[String(dp.id)]){
+          targetProducts.push(deepClone(dp));
+        }
+      }
+    }
+
+    function normalizeAndBackfill(obj){
+      // listeler yoksa default
+      if(!obj.categories) obj.categories = deepClone(DEFAULTS.categories);
+      if(!obj.expenseTypes) obj.expenseTypes = deepClone(DEFAULTS.expenseTypes);
+      if(!obj.salesChannels) obj.salesChannels = deepClone(DEFAULTS.salesChannels);
+
+      // branch yoksa default
+      if(!obj.branches) obj.branches = deepClone(DEFAULTS.branches);
+      if(!obj.branches.hastane) obj.branches.hastane = deepClone(DEFAULTS.branches.hastane);
+      if(!obj.branches.cihanpol) obj.branches.cihanpol = deepClone(DEFAULTS.branches.cihanpol);
+
+      // sanitize
+      sanitizeBranch(obj.branches.hastane);
+      sanitizeBranch(obj.branches.cihanpol);
+
+      // DEFAULTS ürünleri geri ekle (id bazlı)
+      mergeProductsById(obj.branches.hastane.products, DEFAULTS.branches.hastane.products);
+      mergeProductsById(obj.branches.cihanpol.products, DEFAULTS.branches.cihanpol.products);
+
+      return obj;
+    }
+
+    function findBestOldStateInLocalStorage(){
+      // Amaç: eski key'i bilmeden, localStorage içinden branches/products yapısını taşıyan en iyi state'i bulmak
+      var best = null;
+      var bestScore = -1;
+
+      try{
+        for(var i=0;i<localStorage.length;i++){
+          var k = localStorage.key(i);
+          if(!k || k === STORAGE_KEY) continue;
+
+          var raw = localStorage.getItem(k);
+          if(!raw || raw.length < 20) continue;
+          if(raw.charAt(0) !== '{' && raw.charAt(0) !== '[') continue;
+
+          try{
+            var obj = JSON.parse(raw);
+            if(!obj || !obj.branches) continue;
+
+            // farklı yapıları da yakalamak için esnek kontrol
+            var h = obj.branches.hastane;
+            var c = obj.branches.cihanpol;
+            if(!h || !c) continue;
+            if(!Array.isArray(h.products) || !Array.isArray(c.products)) continue;
+
+            var score = (h.products.length || 0) + (c.products.length || 0)
+                      + (Array.isArray(h.sales)?h.sales.length:0) + (Array.isArray(c.sales)?c.sales.length:0);
+
+            if(score > bestScore){
+              bestScore = score;
+              best = obj;
+            }
+          }catch(e2){
+            // ignore
+          }
+        }
+      }catch(e){}
+
+      return best;
+    }
+
+    function loadStateOrDefault(){
+      try{
+        // 1) Yeni key varsa oku
+        var raw = localStorage.getItem(STORAGE_KEY);
+        if(raw){
+          var obj = JSON.parse(raw);
+          if(obj && obj.branches){
+            return normalizeAndBackfill(obj);
+          }
+        }
+
+        // 2) Yeni key yoksa: eski state'i otomatik bul
+        var old = findBestOldStateInLocalStorage();
+        if(old && old.branches){
+          old = normalizeAndBackfill(old);
+          // yeni key'e taşı
+          try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(old)); }catch(e){}
+          // kullanıcıya küçük bilgi
+          setTimeout(function(){
+            showSaveStatus('Eski veriler geri yüklendi', 'success');
+          }, 200);
+          return old;
+        }
+
+        // 3) hiç yoksa defaults
+        return deepClone(DEFAULTS);
+      }catch(e){
+        return deepClone(DEFAULTS);
+      }
+    }
+
     /* ========= SELECTOR RENDER ========= */
     function renderSelectors(){
-      // inventory category select
       var catSelect = document.getElementById('prodCat');
       var filterSelect = document.getElementById('invCatFilter');
       var expSelect = document.getElementById('expenseType');
@@ -1235,20 +1380,23 @@
 
       var i, c, html;
 
-      html = '<div class="chip '+(activeCat==='Hepsi'?'active':'')+'" onclick="filterCat(\'Hepsi\')">📦 Hepsi</div>';
+      // Kategoriler
+      html = '<div class="chip '+(activeCat==='Hepsi'?'active':'')+'" data-cat="Hepsi">📦 Hepsi</div>';
       for(i=0;i<state.categories.length;i++){
         c = state.categories[i];
-        html += '<div class="chip '+(activeCat===c?'active':'')+'" onclick="filterCat(\''+esc(c)+'\')">'+getCategoryIcon(c)+' '+esc(c)+'</div>';
+        html += '<div class="chip '+(activeCat===c?'active':'')+'" data-cat="'+esc(c)+'">'+getCategoryIcon(c)+' '+esc(c)+'</div>';
       }
       catBar.innerHTML = html;
 
+      // Kanallar
       html = '';
       for(i=0;i<state.salesChannels.length;i++){
         c = state.salesChannels[i];
-        html += '<button class="channel-btn '+(activeChannel===c?'active':'')+'" type="button" onclick="setActiveChannel(\''+esc(c)+'\')">'+getChannelIcon(c)+' '+esc(c)+'</button>';
+        html += '<button class="channel-btn '+(activeChannel===c?'active':'')+'" type="button" data-channel="'+esc(c)+'">'+getChannelIcon(c)+' '+esc(c)+'</button>';
       }
       channelButtons.innerHTML = html;
 
+      // Filtre
       var filtered = [];
       if(activeCat==='Hepsi'){
         filtered = branch.products.slice();
@@ -1270,7 +1418,7 @@
         var stockText = (stock>0) ? ('Stok: '+stock) : 'Stok yok';
 
         html += ''
-          + '<div class="product" onclick="addToCart('+Number(p.id)+')">'
+          + '<div class="product" data-pid="'+Number(p.id)+'">'
           +   '<div class="pico">'+esc(p.icon || getCategoryIcon(p.cat))+'</div>'
           +   '<div style="min-width:0;">'
           +     '<b style="font-size:1.05rem;">'+esc(p.name)+'</b>'
@@ -1281,6 +1429,15 @@
           + '</div>';
       }
       posGrid.innerHTML = html;
+
+      // ürün tıklama (event delegation)
+      posGrid.onclick = function(ev){
+        var el = ev.target;
+        while(el && el !== posGrid && !el.classList.contains('product')) el = el.parentNode;
+        if(!el || el === posGrid) return;
+        var pid = Number(el.getAttribute('data-pid'));
+        addToCart(pid);
+      };
     }
 
     function addToCart(id){
@@ -1349,7 +1506,6 @@
         return;
       }
 
-      emptyCart.style.display = 'block';
       emptyCart.style.display = 'none';
 
       var b = getBranch();
@@ -1457,7 +1613,6 @@
       var q = (getVal('salesSearch')||'').toLowerCase();
 
       var html = '';
-      // newest first
       var list = b.sales.slice().sort(function(a,b){ return new Date(b.date) - new Date(a.date); });
 
       for(var i=0;i<list.length;i++){
@@ -1667,8 +1822,7 @@
       var newMethod = getVal('editSaleMethod') || 'nakit';
       var newChannel = getVal('editSaleChannel') || 'Dükkan İçi';
 
-      // stok güncelleme: önce eski satışın stok etkisini geri al, sonra yeni taslağı uygula
-      // 1) geri al
+      // 1) eski satışın stok etkisini geri al
       for(var i=0;i<saleOriginalSnapshot.items.length;i++){
         var oi = saleOriginalSnapshot.items[i];
         var p1 = findProduct(b.products, oi.id);
@@ -1682,7 +1836,7 @@
         if(!p2){ alert('Ürün bulunamadı: '+ni.name); return; }
         var st = Number(p2.stock)||0;
         if(Number(ni.qty) > st){
-          // geri-alınanı tekrar uygula (fail safe): eskiyi tekrar düş
+          // fail-safe: eskiyi tekrar düş
           for(var j=0;j<saleOriginalSnapshot.items.length;j++){
             var oi2 = saleOriginalSnapshot.items[j];
             var pp = findProduct(b.products, oi2.id);
@@ -1755,7 +1909,6 @@
       if(!(stock>=0)){ alert('Stok geçersiz'); return; }
 
       if(idRaw){
-        // update
         var pid = Number(idRaw);
         var p = findProduct(b.products, pid);
         if(!p){ alert('Ürün bulunamadı'); return; }
@@ -1845,7 +1998,7 @@
         var p = b.products[i];
         html += '<tr data-name="'+esc(p.name)+'" data-cat="'+esc(p.cat)+'">'
           + '<td><b>'+esc(p.name)+'</b>'+(p.description?'<br><small class="muted">'+esc(p.description)+'</small>':'')+'</td>'
-          + '<td><span class="chip" style="font-size:11px; padding:5px 10px;">'+esc(p.cat)+'</span></td>'
+          + '<td><span class="chip" style="font-size:11px; height:30px; padding:0 10px;">'+esc(p.cat)+'</span></td>'
           + '<td><b style="color:var(--accent);">'+Number(p.price).toFixed(2)+' ₺</b></td>'
           + '<td>'+Number(p.stock)+'</td>'
           + '<td>'
@@ -1932,7 +2085,7 @@
         var html = '';
         for(var i=0;i<state.expenseTypes.length;i++){
           var t = state.expenseTypes[i];
-          html += '<span class="chip" style="font-size:12px; padding:8px 12px;">'+getExpenseIcon(t)+' '+esc(t)+'</span>';
+          html += '<span class="chip" style="height:36px; padding:0 12px; font-size:12px;">'+getExpenseIcon(t)+' '+esc(t)+'</span>';
         }
         expTypeList.innerHTML = html;
       }
