@@ -545,16 +545,25 @@
     .sync-ok{color:var(--success); border-color:rgba(34,197,94,.35); background:rgba(34,197,94,.10);}
     .sync-warn{color:var(--warning); border-color:rgba(245,158,11,.35); background:rgba(245,158,11,.10);}
     .sync-bad{color:var(--danger); border-color:rgba(239,68,68,.35); background:rgba(239,68,68,.10);}
-    .sync-dot{
-      width:10px; height:10px; border-radius:50%;
-      display:inline-block;
-      border:1px solid rgba(255,255,255,.18);
-      background:rgba(245,158,11,.90);
-      margin-right:6px;
+
+    /* Topbar sync indicator */
+    .sync-top-btn{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 12px; border-radius:14px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.03);
+      font-weight:800;
     }
-    .sync-dot.sync-ok{ background:rgba(34,197,94,.90); }
-    .sync-dot.sync-warn{ background:rgba(245,158,11,.90); }
-    .sync-dot.sync-bad{ background:rgba(239,68,68,.90); }
+    .sync-dot{
+      width:10px; height:10px; border-radius:999px;
+      display:inline-block;
+      border:1px solid rgba(255,255,255,.25);
+      box-shadow:0 0 0 3px rgba(255,255,255,.04);
+    }
+    .sync-dot.ok{ background:rgba(34,197,94,.95); }
+    .sync-dot.warn{ background:rgba(245,158,11,.95); }
+    .sync-dot.bad{ background:rgba(239,68,68,.95); }
+    .mini-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px;}
 
   </style>
 </head>
@@ -654,12 +663,12 @@
           <span id="activeBranchLabel" class="muted"></span>
           <span id="dataSourceTop" style="font-size:12px; color:var(--muted); font-weight:600; margin-left:8px;"></span>
         </h1>
-        <div class="row" style="gap:8px;">
-          <button class="btn" type="button" onclick="toggleSidebar()">☰ Menü</button>
-          <button class="btn" type="button" onclick="openSyncPanel()" title="Canlı Senkron (Google Sheets)">
-            <span id="syncDotTop" class="sync-dot sync-warn"></span>
-            🔄 Senkron
+        <div class="row">
+          <button class="sync-top-btn" id="syncTopBtn" type="button" onclick="openSyncPanel()" title="Canlı Senkron">
+            🔄 <span id="syncDotTop" class="sync-dot warn"></span>
+            <span id="syncTopLabel" class="muted" style="font-size:12px; font-weight:900;">Senkron</span>
           </button>
+          <button class="btn" type="button" onclick="toggleSidebar()">☰ Menü</button>
         </div>
       </div>
 
@@ -695,6 +704,16 @@
             <div id="cartList"></div>
 
             <div class="cart-summary">
+              <div class="muted">Ara Toplam</div>
+              <div class="cart-total" id="cartSubtotal">0.00 ₺</div>
+            </div>
+
+            <div id="deliveryFeeRow" style="display:none; margin-top:10px;">
+              <div class="muted" style="font-size:12px; margin-bottom:6px;">Kurye Ücreti (Telefon)</div>
+              <input id="deliveryFee" type="number" step="0.01" min="0" placeholder="0.00" oninput="renderCart()">
+            </div>
+
+            <div class="cart-summary" style="margin-top:10px;">
               <div class="muted">Toplam</div>
               <div class="cart-total" id="cartTotal">0.00 ₺</div>
             </div>
@@ -747,63 +766,17 @@
           </h2>
 
           <div class="row" style="flex-wrap:wrap; gap:12px; margin-bottom:12px;">
-            <div style="flex:1; min-width:180px;">
-              <div class="muted" style="font-size:12px; margin-bottom:6px;">Dönem</div>
-              <select id="salesPeriod" onchange="onSalesPeriodChange()">
-                <option value="all">Hepsi</option>
-                <option value="day">Gün (Seç)</option>
-                <option value="week">Bu Hafta</option>
-                <option value="month">Bu Ay</option>
-                <option value="range">Özel Aralık</option>
-              </select>
-            </div>
-
-            <div id="salesDayWrap" style="flex:1; min-width:180px; display:none;">
-              <div class="muted" style="font-size:12px; margin-bottom:6px;">Gün</div>
+            <div style="flex:1; min-width:220px;">
+              <div class="muted" style="font-size:12px; margin-bottom:6px;">Tarih</div>
               <input type="date" id="salesDateFilter" onchange="filterSales()">
             </div>
-
-            <div id="salesRangeWrap" style="flex:2; min-width:260px; display:none;">
-              <div class="muted" style="font-size:12px; margin-bottom:6px;">Aralık</div>
-              <div class="row" style="gap:8px;">
-                <input type="date" id="salesStartFilter" onchange="filterSales()">
-                <input type="date" id="salesEndFilter" onchange="filterSales()">
-              </div>
-            </div>
-
-            <div style="flex:1; min-width:180px;">
+            <div style="flex:1; min-width:220px;">
               <div class="muted" style="font-size:12px; margin-bottom:6px;">Kanal</div>
               <select id="salesChannelFilter" onchange="filterSales()"></select>
             </div>
-
-            <div style="flex:1; min-width:180px;">
-              <div class="muted" style="font-size:12px; margin-bottom:6px;">Ödeme</div>
-              <select id="salesMethodFilter" onchange="filterSales()">
-                <option value="Hepsi">Hepsi</option>
-                <option value="nakit">Nakit</option>
-                <option value="kart">Kart</option>
-                <option value="online">Online</option>
-              </select>
-            </div>
-
-            <div style="flex:1; min-width:160px;">
-              <div class="muted" style="font-size:12px; margin-bottom:6px;">Min ₺</div>
-              <input type="number" inputmode="decimal" id="salesMinTotal" placeholder="0" oninput="filterSales()">
-            </div>
-
-            <div style="flex:1; min-width:160px;">
-              <div class="muted" style="font-size:12px; margin-bottom:6px;">Max ₺</div>
-              <input type="number" inputmode="decimal" id="salesMaxTotal" placeholder="-" oninput="filterSales()">
-            </div>
-
-            <div style="flex:2; min-width:240px;">
+            <div style="flex:1; min-width:220px;">
               <div class="muted" style="font-size:12px; margin-bottom:6px;">Ara</div>
-              <input id="salesSearch" placeholder="Ürün/kanal/ID/ödeme ara..." oninput="filterSales()">
-            </div>
-
-            <div style="flex:0; min-width:140px;">
-              <div class="muted" style="font-size:12px; margin-bottom:6px;">&nbsp;</div>
-              <button class="btn btn-sm" type="button" onclick="exportSalesCSV()">📄 Satış CSV</button>
+              <input id="salesSearch" placeholder="Ürün/kanal/ID ara..." oninput="filterSales()">
             </div>
           </div>
 
@@ -859,7 +832,14 @@
                 <input id="pIcon" placeholder="Örn: 🌯">
               </div>
             </div>
-            <div class="row" style="margin-top:12px; flex-wrap:wrap;">
+            
+            <div style="margin-top:12px;">
+              <div class="muted" style="font-size:12px; margin-bottom:6px;">Kanal Bazlı Fiyatlar (opsiyonel)</div>
+              <div class="mini-grid" id="channelPriceFields"></div>
+              <div class="muted" style="font-size:12px; margin-top:6px;">Boş bırakılan kanallar, "Fiyat" alanını kullanır.</div>
+            </div>
+
+<div class="row" style="margin-top:12px; flex-wrap:wrap;">
               <input type="hidden" id="pId">
               <button class="btn btn-primary" type="button" onclick="saveProduct()">💾 Kaydet</button>
               <button class="btn" type="button" onclick="resetProductForm()">↩️ Sıfırla</button>
@@ -877,7 +857,12 @@
                 <div class="muted" style="font-size:12px; margin-bottom:6px;">Kategori</div>
                 <select id="invCatFilter" onchange="filterProducts()"></select>
               </div>
+              
               <div style="flex:1; min-width:220px;">
+                <div class="muted" style="font-size:12px; margin-bottom:6px;">Fiyat Kanalı</div>
+                <select id="invPriceChannel" onchange="filterProducts()"></select>
+              </div>
+<div style="flex:1; min-width:220px;">
                 <div class="muted" style="font-size:12px; margin-bottom:6px;">Ara</div>
                 <input id="invSearch" placeholder="Ürün adı ara..." oninput="filterProducts()">
               </div>
@@ -945,57 +930,15 @@
             </h2>
 
             <div class="row" style="flex-wrap:wrap; gap:12px; margin-bottom:12px;">
-              <div style="flex:1; min-width:180px;">
-                <div class="muted" style="font-size:12px; margin-bottom:6px;">Dönem</div>
-                <select id="expPeriod" onchange="onExpPeriodChange()">
-                  <option value="all">Hepsi</option>
-                  <option value="day">Gün (Seç)</option>
-                  <option value="week">Bu Hafta</option>
-                  <option value="month">Bu Ay</option>
-                  <option value="range">Özel Aralık</option>
-                </select>
-              </div>
-
-              <div id="expDayWrap" style="flex:1; min-width:180px; display:none;">
-                <div class="muted" style="font-size:12px; margin-bottom:6px;">Gün</div>
-                <input type="date" id="expDayFilter" onchange="filterExpenses()">
-              </div>
-
-              <div id="expRangeWrap" style="flex:2; min-width:260px; display:none;">
-                <div class="muted" style="font-size:12px; margin-bottom:6px;">Aralık</div>
-                <div class="row" style="gap:8px;">
-                  <input type="date" id="expStartFilter" onchange="filterExpenses()">
-                  <input type="date" id="expEndFilter" onchange="filterExpenses()">
-                </div>
-              </div>
-
-              <div style="flex:1; min-width:180px;">
+              <div style="flex:1; min-width:220px;">
                 <div class="muted" style="font-size:12px; margin-bottom:6px;">Tip</div>
                 <select id="expTypeFilter" onchange="filterExpenses()"></select>
               </div>
-
-              <div style="flex:1; min-width:160px;">
-                <div class="muted" style="font-size:12px; margin-bottom:6px;">Min ₺</div>
-                <input type="number" inputmode="decimal" id="expMinAmount" placeholder="0" oninput="filterExpenses()">
-              </div>
-
-              <div style="flex:1; min-width:160px;">
-                <div class="muted" style="font-size:12px; margin-bottom:6px;">Max ₺</div>
-                <input type="number" inputmode="decimal" id="expMaxAmount" placeholder="-" oninput="filterExpenses()">
-              </div>
-
-              <div style="flex:2; min-width:240px;">
+              <div style="flex:1; min-width:220px;">
                 <div class="muted" style="font-size:12px; margin-bottom:6px;">Ara</div>
-                <input id="expSearch" placeholder="Açıklama/tip ara..." oninput="filterExpenses()">
-              </div>
-
-              <div style="flex:0; min-width:140px;">
-                <div class="muted" style="font-size:12px; margin-bottom:6px;">&nbsp;</div>
-                <button class="btn btn-sm" type="button" onclick="exportExpensesCSV()">📄 Gider CSV</button>
+                <input id="expSearch" placeholder="Açıklama ara..." oninput="filterExpenses()">
               </div>
             </div>
-
-            <div class="muted" style="font-size:12px; margin:-6px 0 12px 0;" id="expFilteredSummary"></div>
 
             <div style="overflow:auto;">
               <table>
@@ -1038,13 +981,23 @@
               </div>
             </div>
 
-            <div style="margin-top:12px;">
+            
+            <div id="editDeliveryFeeRow" style="display:none; margin-top:12px;">
+              <div class="muted" style="font-size:12px; margin-bottom:6px;">Kurye Ücreti (Telefon)</div>
+              <input id="editDeliveryFee" type="number" step="0.01" min="0" placeholder="0.00" oninput="updateEditSaleTotals()">
+            </div>
+
+<div style="margin-top:12px;">
               <div class="muted" style="font-size:12px; margin-bottom:6px;">Ürünler</div>
               <div id="editSaleItems"></div>
             </div>
 
             <div class="row" style="margin-top:12px; justify-content:space-between;">
-              <div class="muted">Yeni Toplam</div>
+              <div class="muted">Ara Toplam</div>
+              <div style="font-weight:950;" id="editSaleSubtotal">0.00 ₺</div>
+            </div>
+            <div class="row" style="margin-top:8px; justify-content:space-between;">
+              <div class="muted">Genel Toplam</div>
               <div style="font-weight:950;" id="editSaleTotal">0.00 ₺</div>
             </div>
           </div>
@@ -1062,428 +1015,432 @@
 
   <!-- Şube 1: Hastane Şubesi Ürünleri -->
   <script type="application/json" id="branchHastaneProducts">
-  [
-        {
-            "id": 3,
-            "name": "Tombik 90gr",
-            "cat": "Tombikler",
-            "price": 65,
-            "stock": 60,
-            "icon": "🥙",
-            "description": "Normal boy tombik"
-        },
-        {
-            "id": 4,
-            "name": "Mega Tombik 130gr",
-            "cat": "Tombikler",
-            "price": 90,
-            "stock": 50,
-            "icon": "🥙",
-            "description": "Mega boy tombik"
-        },
-        {
-            "id": 5,
-            "name": "Çiğ Köfte 250gr",
-            "cat": "Çiğ Köfte",
-            "price": 90,
-            "stock": 40,
-            "icon": "🥗",
-            "description": "250gr porsiyon"
-        },
-        {
-            "id": 6,
-            "name": "Çiğ Köfte 500gr",
-            "cat": "Çiğ Köfte",
-            "price": 170,
-            "stock": 30,
-            "icon": "🥗",
-            "description": "500gr porsiyon"
-        },
-        {
-            "id": 7,
-            "name": "Çiğ Köfte 1kg",
-            "cat": "Çiğ Köfte",
-            "price": 320,
-            "stock": 20,
-            "icon": "🥗",
-            "description": "1kg paket"
-        },
-        {
-            "id": 8,
-            "name": "Ayran 200ml",
-            "cat": "İçecek",
-            "price": 15,
-            "stock": 120,
-            "icon": "🥛",
-            "description": "Soğuk ayran"
-        },
-        {
-            "id": 9,
-            "name": "Şalgam 300ml",
-            "cat": "İçecek",
-            "price": 20,
-            "stock": 90,
-            "icon": "🧃",
-            "description": "Acılı/Acısız"
-        },
-        {
-            "id": 10,
-            "name": "Kola 330ml",
-            "cat": "İçecek",
-            "price": 25,
-            "stock": 90,
-            "icon": "🥤",
-            "description": "Kutu kola"
-        },
-        {
-            "id": 11,
-            "name": "Fanta 330ml",
-            "cat": "İçecek",
-            "price": 25,
-            "stock": 80,
-            "icon": "🥤",
-            "description": "Kutu fanta"
-        },
-        {
-            "id": 12,
-            "name": "Su 500ml",
-            "cat": "İçecek",
-            "price": 10,
-            "stock": 200,
-            "icon": "💧",
-            "description": "Su"
-        },
-        {
-            "id": 13,
-            "name": "Soda",
-            "cat": "İçecek",
-            "price": 12,
-            "stock": 100,
-            "icon": "🫧",
-            "description": "Maden suyu"
-        },
-        {
-            "id": 14,
-            "name": "Nar Ekşisi",
-            "cat": "Ekstra",
-            "price": 10,
-            "stock": 60,
-            "icon": "🍯",
-            "description": "Ekstra sos"
-        },
-        {
-            "id": 15,
-            "name": "Acı Sos",
-            "cat": "Ekstra",
-            "price": 10,
-            "stock": 60,
-            "icon": "🌶️",
-            "description": "Ekstra acı"
-        },
-        {
-            "id": 16,
-            "name": "Lavaş",
-            "cat": "Ekstra",
-            "price": 5,
-            "stock": 200,
-            "icon": "🫓",
-            "description": "Tek lavaş"
-        },
-        {
-            "id": 17,
-            "name": "Marul",
-            "cat": "Ekstra",
-            "price": 5,
-            "stock": 150,
-            "icon": "🥬",
-            "description": "Tek marul"
-        },
-        {
-            "id": 18,
-            "name": "Turşu",
-            "cat": "Ekstra",
-            "price": 5,
-            "stock": 150,
-            "icon": "🥒",
-            "description": "Tek turşu"
-        },
-        {
-            "id": 19,
-            "name": "Patates Kızartması",
-            "cat": "Atıştırmalık",
-            "price": 40,
-            "stock": 35,
-            "icon": "🍟",
-            "description": "Porsiyon patates"
-        },
-        {
-            "id": 20,
-            "name": "Soğan Halkası",
-            "cat": "Atıştırmalık",
-            "price": 45,
-            "stock": 30,
-            "icon": "🧅",
-            "description": "Porsiyon soğan halkası"
-        },
-        {
-            "id": 21,
-            "name": "Soslu Patates",
-            "cat": "Atıştırmalık",
-            "price": 50,
-            "stock": 25,
-            "icon": "🍟",
-            "description": "Özel soslu"
-        },
-        {
-            "id": 22,
-            "name": "Tatlı",
-            "cat": "Tatlı",
-            "price": 35,
-            "stock": 20,
-            "icon": "🍰",
-            "description": "Günün tatlısı"
-        },
-        {
-            "id": 23,
-            "name": "Brownie",
-            "cat": "Tatlı",
-            "price": 40,
-            "stock": 15,
-            "icon": "🍫",
-            "description": "Brownie dilim"
-        },
-        {
-            "id": 24,
-            "name": "Künefe",
-            "cat": "Tatlı",
-            "price": 60,
-            "stock": 12,
-            "icon": "🧀",
-            "description": "Sıcak künefe"
-        },
-        {
-            "id": 25,
-            "name": "Çay",
-            "cat": "İçecek",
-            "price": 10,
-            "stock": 200,
-            "icon": "🍵",
-            "description": "Sıcak çay"
-        }
-    ]
+  
+[
+    {
+        "id": 3,
+        "name": "Tombik 90gr",
+        "cat": "Tombikler",
+        "price": 65,
+        "stock": 60,
+        "icon": "🥙",
+        "description": "Normal boy tombik"
+    },
+    {
+        "id": 4,
+        "name": "Mega Tombik 130gr",
+        "cat": "Tombikler",
+        "price": 90,
+        "stock": 50,
+        "icon": "🥙",
+        "description": "Mega boy tombik"
+    },
+    {
+        "id": 5,
+        "name": "Çiğ Köfte 250gr",
+        "cat": "Çiğ Köfte",
+        "price": 90,
+        "stock": 40,
+        "icon": "🥗",
+        "description": "250gr porsiyon"
+    },
+    {
+        "id": 6,
+        "name": "Çiğ Köfte 500gr",
+        "cat": "Çiğ Köfte",
+        "price": 170,
+        "stock": 30,
+        "icon": "🥗",
+        "description": "500gr porsiyon"
+    },
+    {
+        "id": 7,
+        "name": "Çiğ Köfte 1kg",
+        "cat": "Çiğ Köfte",
+        "price": 320,
+        "stock": 20,
+        "icon": "🥗",
+        "description": "1kg paket"
+    },
+    {
+        "id": 8,
+        "name": "Ayran 200ml",
+        "cat": "İçecek",
+        "price": 15,
+        "stock": 120,
+        "icon": "🥛",
+        "description": "Soğuk ayran"
+    },
+    {
+        "id": 9,
+        "name": "Şalgam 300ml",
+        "cat": "İçecek",
+        "price": 20,
+        "stock": 90,
+        "icon": "🧃",
+        "description": "Acılı/Acısız"
+    },
+    {
+        "id": 10,
+        "name": "Kola 330ml",
+        "cat": "İçecek",
+        "price": 25,
+        "stock": 90,
+        "icon": "🥤",
+        "description": "Kutu kola"
+    },
+    {
+        "id": 11,
+        "name": "Fanta 330ml",
+        "cat": "İçecek",
+        "price": 25,
+        "stock": 80,
+        "icon": "🥤",
+        "description": "Kutu fanta"
+    },
+    {
+        "id": 12,
+        "name": "Su 500ml",
+        "cat": "İçecek",
+        "price": 10,
+        "stock": 200,
+        "icon": "💧",
+        "description": "Su"
+    },
+    {
+        "id": 13,
+        "name": "Soda",
+        "cat": "İçecek",
+        "price": 12,
+        "stock": 100,
+        "icon": "🫧",
+        "description": "Maden suyu"
+    },
+    {
+        "id": 14,
+        "name": "Nar Ekşisi",
+        "cat": "Ekstra",
+        "price": 10,
+        "stock": 60,
+        "icon": "🍯",
+        "description": "Ekstra sos"
+    },
+    {
+        "id": 15,
+        "name": "Acı Sos",
+        "cat": "Ekstra",
+        "price": 10,
+        "stock": 60,
+        "icon": "🌶️",
+        "description": "Ekstra acı"
+    },
+    {
+        "id": 16,
+        "name": "Lavaş",
+        "cat": "Ekstra",
+        "price": 5,
+        "stock": 200,
+        "icon": "🫓",
+        "description": "Tek lavaş"
+    },
+    {
+        "id": 17,
+        "name": "Marul",
+        "cat": "Ekstra",
+        "price": 5,
+        "stock": 150,
+        "icon": "🥬",
+        "description": "Tek marul"
+    },
+    {
+        "id": 18,
+        "name": "Turşu",
+        "cat": "Ekstra",
+        "price": 5,
+        "stock": 150,
+        "icon": "🥒",
+        "description": "Tek turşu"
+    },
+    {
+        "id": 19,
+        "name": "Patates Kızartması",
+        "cat": "Atıştırmalık",
+        "price": 40,
+        "stock": 35,
+        "icon": "🍟",
+        "description": "Porsiyon patates"
+    },
+    {
+        "id": 20,
+        "name": "Soğan Halkası",
+        "cat": "Atıştırmalık",
+        "price": 45,
+        "stock": 30,
+        "icon": "🧅",
+        "description": "Porsiyon soğan halkası"
+    },
+    {
+        "id": 21,
+        "name": "Soslu Patates",
+        "cat": "Atıştırmalık",
+        "price": 50,
+        "stock": 25,
+        "icon": "🍟",
+        "description": "Özel soslu"
+    },
+    {
+        "id": 22,
+        "name": "Tatlı",
+        "cat": "Tatlı",
+        "price": 35,
+        "stock": 20,
+        "icon": "🍰",
+        "description": "Günün tatlısı"
+    },
+    {
+        "id": 23,
+        "name": "Brownie",
+        "cat": "Tatlı",
+        "price": 40,
+        "stock": 15,
+        "icon": "🍫",
+        "description": "Brownie dilim"
+    },
+    {
+        "id": 24,
+        "name": "Künefe",
+        "cat": "Tatlı",
+        "price": 60,
+        "stock": 12,
+        "icon": "🧀",
+        "description": "Sıcak künefe"
+    },
+    {
+        "id": 25,
+        "name": "Çay",
+        "cat": "İçecek",
+        "price": 10,
+        "stock": 200,
+        "icon": "🍵",
+        "description": "Sıcak çay"
+    }
+]
+  
   </script>
 
   <!-- Şube 2: Cihanpol Şubesi Ürünleri -->
   <script type="application/json" id="branchCihanpolProducts">
-  [
-        {
-            "id": 3,
-            "name": "Tombik 90gr",
-            "cat": "Tombikler",
-            "price": 65,
-            "stock": 50,
-            "icon": "🥙",
-            "description": "Normal boy tombik"
-        },
-        {
-            "id": 4,
-            "name": "Mega Tombik 130gr",
-            "cat": "Tombikler",
-            "price": 90,
-            "stock": 45,
-            "icon": "🥙",
-            "description": "Mega boy tombik"
-        },
-        {
-            "id": 5,
-            "name": "Çiğ Köfte 250gr",
-            "cat": "Çiğ Köfte",
-            "price": 90,
-            "stock": 35,
-            "icon": "🥗",
-            "description": "250gr porsiyon"
-        },
-        {
-            "id": 6,
-            "name": "Çiğ Köfte 500gr",
-            "cat": "Çiğ Köfte",
-            "price": 170,
-            "stock": 25,
-            "icon": "🥗",
-            "description": "500gr porsiyon"
-        },
-        {
-            "id": 7,
-            "name": "Çiğ Köfte 1kg",
-            "cat": "Çiğ Köfte",
-            "price": 320,
-            "stock": 18,
-            "icon": "🥗",
-            "description": "1kg paket"
-        },
-        {
-            "id": 8,
-            "name": "Ayran 200ml",
-            "cat": "İçecek",
-            "price": 15,
-            "stock": 110,
-            "icon": "🥛",
-            "description": "Soğuk ayran"
-        },
-        {
-            "id": 9,
-            "name": "Şalgam 300ml",
-            "cat": "İçecek",
-            "price": 20,
-            "stock": 85,
-            "icon": "🧃",
-            "description": "Acılı/Acısız"
-        },
-        {
-            "id": 10,
-            "name": "Kola 330ml",
-            "cat": "İçecek",
-            "price": 25,
-            "stock": 80,
-            "icon": "🥤",
-            "description": "Kutu kola"
-        },
-        {
-            "id": 11,
-            "name": "Fanta 330ml",
-            "cat": "İçecek",
-            "price": 25,
-            "stock": 70,
-            "icon": "🥤",
-            "description": "Kutu fanta"
-        },
-        {
-            "id": 12,
-            "name": "Su 500ml",
-            "cat": "İçecek",
-            "price": 10,
-            "stock": 180,
-            "icon": "💧",
-            "description": "Su"
-        },
-        {
-            "id": 13,
-            "name": "Soda",
-            "cat": "İçecek",
-            "price": 12,
-            "stock": 90,
-            "icon": "🫧",
-            "description": "Maden suyu"
-        },
-        {
-            "id": 14,
-            "name": "Nar Ekşisi",
-            "cat": "Ekstra",
-            "price": 10,
-            "stock": 55,
-            "icon": "🍯",
-            "description": "Ekstra sos"
-        },
-        {
-            "id": 15,
-            "name": "Acı Sos",
-            "cat": "Ekstra",
-            "price": 10,
-            "stock": 55,
-            "icon": "🌶️",
-            "description": "Ekstra acı"
-        },
-        {
-            "id": 16,
-            "name": "Lavaş",
-            "cat": "Ekstra",
-            "price": 5,
-            "stock": 180,
-            "icon": "🫓",
-            "description": "Tek lavaş"
-        },
-        {
-            "id": 17,
-            "name": "Marul",
-            "cat": "Ekstra",
-            "price": 5,
-            "stock": 140,
-            "icon": "🥬",
-            "description": "Tek marul"
-        },
-        {
-            "id": 18,
-            "name": "Turşu",
-            "cat": "Ekstra",
-            "price": 5,
-            "stock": 140,
-            "icon": "🥒",
-            "description": "Tek turşu"
-        },
-        {
-            "id": 19,
-            "name": "Patates Kızartması",
-            "cat": "Atıştırmalık",
-            "price": 40,
-            "stock": 30,
-            "icon": "🍟",
-            "description": "Porsiyon patates"
-        },
-        {
-            "id": 20,
-            "name": "Soğan Halkası",
-            "cat": "Atıştırmalık",
-            "price": 45,
-            "stock": 26,
-            "icon": "🧅",
-            "description": "Porsiyon soğan halkası"
-        },
-        {
-            "id": 21,
-            "name": "Soslu Patates",
-            "cat": "Atıştırmalık",
-            "price": 50,
-            "stock": 20,
-            "icon": "🍟",
-            "description": "Özel soslu"
-        },
-        {
-            "id": 22,
-            "name": "Tatlı",
-            "cat": "Tatlı",
-            "price": 35,
-            "stock": 16,
-            "icon": "🍰",
-            "description": "Günün tatlısı"
-        },
-        {
-            "id": 23,
-            "name": "Brownie",
-            "cat": "Tatlı",
-            "price": 40,
-            "stock": 12,
-            "icon": "🍫",
-            "description": "Brownie dilim"
-        },
-        {
-            "id": 24,
-            "name": "Künefe",
-            "cat": "Tatlı",
-            "price": 60,
-            "stock": 10,
-            "icon": "🧀",
-            "description": "Sıcak künefe"
-        },
-        {
-            "id": 25,
-            "name": "Çay",
-            "cat": "İçecek",
-            "price": 10,
-            "stock": 180,
-            "icon": "🍵",
-            "description": "Sıcak çay"
-        }
-    ]
+  
+[
+    {
+        "id": 3,
+        "name": "Tombik 90gr",
+        "cat": "Tombikler",
+        "price": 65,
+        "stock": 50,
+        "icon": "🥙",
+        "description": "Normal boy tombik"
+    },
+    {
+        "id": 4,
+        "name": "Mega Tombik 130gr",
+        "cat": "Tombikler",
+        "price": 90,
+        "stock": 45,
+        "icon": "🥙",
+        "description": "Mega boy tombik"
+    },
+    {
+        "id": 5,
+        "name": "Çiğ Köfte 250gr",
+        "cat": "Çiğ Köfte",
+        "price": 90,
+        "stock": 35,
+        "icon": "🥗",
+        "description": "250gr porsiyon"
+    },
+    {
+        "id": 6,
+        "name": "Çiğ Köfte 500gr",
+        "cat": "Çiğ Köfte",
+        "price": 170,
+        "stock": 25,
+        "icon": "🥗",
+        "description": "500gr porsiyon"
+    },
+    {
+        "id": 7,
+        "name": "Çiğ Köfte 1kg",
+        "cat": "Çiğ Köfte",
+        "price": 320,
+        "stock": 18,
+        "icon": "🥗",
+        "description": "1kg paket"
+    },
+    {
+        "id": 8,
+        "name": "Ayran 200ml",
+        "cat": "İçecek",
+        "price": 15,
+        "stock": 110,
+        "icon": "🥛",
+        "description": "Soğuk ayran"
+    },
+    {
+        "id": 9,
+        "name": "Şalgam 300ml",
+        "cat": "İçecek",
+        "price": 20,
+        "stock": 85,
+        "icon": "🧃",
+        "description": "Acılı/Acısız"
+    },
+    {
+        "id": 10,
+        "name": "Kola 330ml",
+        "cat": "İçecek",
+        "price": 25,
+        "stock": 80,
+        "icon": "🥤",
+        "description": "Kutu kola"
+    },
+    {
+        "id": 11,
+        "name": "Fanta 330ml",
+        "cat": "İçecek",
+        "price": 25,
+        "stock": 70,
+        "icon": "🥤",
+        "description": "Kutu fanta"
+    },
+    {
+        "id": 12,
+        "name": "Su 500ml",
+        "cat": "İçecek",
+        "price": 10,
+        "stock": 180,
+        "icon": "💧",
+        "description": "Su"
+    },
+    {
+        "id": 13,
+        "name": "Soda",
+        "cat": "İçecek",
+        "price": 12,
+        "stock": 90,
+        "icon": "🫧",
+        "description": "Maden suyu"
+    },
+    {
+        "id": 14,
+        "name": "Nar Ekşisi",
+        "cat": "Ekstra",
+        "price": 10,
+        "stock": 55,
+        "icon": "🍯",
+        "description": "Ekstra sos"
+    },
+    {
+        "id": 15,
+        "name": "Acı Sos",
+        "cat": "Ekstra",
+        "price": 10,
+        "stock": 55,
+        "icon": "🌶️",
+        "description": "Ekstra acı"
+    },
+    {
+        "id": 16,
+        "name": "Lavaş",
+        "cat": "Ekstra",
+        "price": 5,
+        "stock": 180,
+        "icon": "🫓",
+        "description": "Tek lavaş"
+    },
+    {
+        "id": 17,
+        "name": "Marul",
+        "cat": "Ekstra",
+        "price": 5,
+        "stock": 140,
+        "icon": "🥬",
+        "description": "Tek marul"
+    },
+    {
+        "id": 18,
+        "name": "Turşu",
+        "cat": "Ekstra",
+        "price": 5,
+        "stock": 140,
+        "icon": "🥒",
+        "description": "Tek turşu"
+    },
+    {
+        "id": 19,
+        "name": "Patates Kızartması",
+        "cat": "Atıştırmalık",
+        "price": 40,
+        "stock": 30,
+        "icon": "🍟",
+        "description": "Porsiyon patates"
+    },
+    {
+        "id": 20,
+        "name": "Soğan Halkası",
+        "cat": "Atıştırmalık",
+        "price": 45,
+        "stock": 26,
+        "icon": "🧅",
+        "description": "Porsiyon soğan halkası"
+    },
+    {
+        "id": 21,
+        "name": "Soslu Patates",
+        "cat": "Atıştırmalık",
+        "price": 50,
+        "stock": 20,
+        "icon": "🍟",
+        "description": "Özel soslu"
+    },
+    {
+        "id": 22,
+        "name": "Tatlı",
+        "cat": "Tatlı",
+        "price": 35,
+        "stock": 16,
+        "icon": "🍰",
+        "description": "Günün tatlısı"
+    },
+    {
+        "id": 23,
+        "name": "Brownie",
+        "cat": "Tatlı",
+        "price": 40,
+        "stock": 12,
+        "icon": "🍫",
+        "description": "Brownie dilim"
+    },
+    {
+        "id": 24,
+        "name": "Künefe",
+        "cat": "Tatlı",
+        "price": 60,
+        "stock": 10,
+        "icon": "🧀",
+        "description": "Sıcak künefe"
+    },
+    {
+        "id": 25,
+        "name": "Çay",
+        "cat": "İçecek",
+        "price": 10,
+        "stock": 180,
+        "icon": "🍵",
+        "description": "Sıcak çay"
+    }
+]
+  
   </script>
 
       <script>
@@ -1510,6 +1467,21 @@ var SHEETS_SYNC = {
         hastane: { name:'Hastane Şubesi', products:[], sales:[], expenses:[] },
         cihanpol:{ name:'Cihanpol Şubesi', products:[], sales:[], expenses:[] }
       }
+
+      var sel3 = document.getElementById('invPriceChannel');
+      if(sel3){
+        var html3 = '';
+        var chans = getActiveSalesChannels();
+        for(i=0;i<chans.length;i++){
+          html3 += '<option value="'+esc(chans[i])+'">'+esc(chans[i])+'</option>';
+        }
+        sel3.innerHTML = html3;
+        // boş ise ilk kanalı seç
+        if(!sel3.value && chans[0]) sel3.value = chans[0];
+      }
+
+      // form ilk açılışta alanları hazırla
+      renderChannelPriceFields(null);
     };
 
     // Default ürünleri JSON scriptlerden oku ve DEFAULTS içine koy
@@ -1612,23 +1584,6 @@ var SHEETS_SYNC = {
         if(!Array.isArray(st.branches[k].sales)) st.branches[k].sales = [];
         if(!Array.isArray(st.branches[k].expenses)) st.branches[k].expenses = [];
 
-        // Kaldırılan ürünleri temizle (Dürüm 90gr / Mega Dürüm 130gr)
-        try{
-          st.branches[k].products = st.branches[k].products.filter(function(p){
-            var n = (p && p.name) ? String(p.name).trim() : '';
-            return (n !== 'Dürüm 90gr' && n !== 'Mega Dürüm 130gr');
-          });
-        }catch(e){}
-        // Satışlarda dateKey yoksa üret (UTC günü kaydırmasın)
-        try{
-          for(var si=0; si<st.branches[k].sales.length; si++){
-            var s = st.branches[k].sales[si];
-            if(s && !s.dateKey && s.date){
-              s.dateKey = istDateKeyFromDate(new Date(s.date));
-            }
-          }
-        }catch(e){}
-
         // ürünleri geri doldur (id bazlı)
         var defaultProducts = DEFAULTS.branches[k].products || [];
         if(defaultProducts.length){
@@ -1643,6 +1598,63 @@ var SHEETS_SYNC = {
             }
           }
         }
+
+        // Zorunlu ürün temizliği (kaldırılan ürünler)
+        try{
+          st.branches[k].products = (st.branches[k].products||[]).filter(function(pp){
+            var nm = String(pp && pp.name || '').trim();
+            return (nm !== 'Dürüm 90gr' && nm !== 'Mega Dürüm 130gr');
+          });
+        }catch(e){}
+
+        // Ürünlerde kanal bazlı fiyatlar (geriye uyumlu)
+        try{
+          var chs = st.salesChannels || [];
+          for(var pi=0; pi<(st.branches[k].products||[]).length; pi++){
+            var pr = st.branches[k].products[pi];
+            if(!pr.prices || typeof pr.prices !== 'object') pr.prices = {};
+            var baseP = Number(pr.price)||0;
+            if(pr.prices['Dükkan İçi']===undefined || pr.prices['Dükkan İçi']===null || pr.prices['Dükkan İçi']===''){
+              pr.prices['Dükkan İçi'] = baseP;
+            }
+            // diğer kanallar boş kalabilir (fallback: pr.price)
+            // ancak yanlış tipleri temizleyelim
+            for(var ci2=0; ci2<chs.length; ci2++){
+              var ch2 = String(chs[ci2]||'').trim();
+              if(!ch2) continue;
+              if(pr.prices[ch2]!==undefined && pr.prices[ch2]!==null && pr.prices[ch2]!=='' ){
+                pr.prices[ch2] = Number(pr.prices[ch2])||0;
+              }
+            }
+          }
+        }catch(e){}
+
+        // Satış kayıtları: dateKey + subtotal/deliveryFee uyumluluğu
+        try{
+          var fmt = new Intl.DateTimeFormat('en-CA', {timeZone:'Europe/Istanbul', year:'numeric', month:'2-digit', day:'2-digit'});
+          var salesArr = st.branches[k].sales || [];
+          for(var si=0; si<salesArr.length; si++){
+            var s = salesArr[si] || {};
+            if(!s.dateKey){
+              try{
+                var dd = new Date(s.date);
+                if(!isNaN(dd.getTime())) s.dateKey = fmt.format(dd);
+              }catch(e){}
+            }
+            if(s.deliveryFee===undefined || s.deliveryFee===null || s.deliveryFee==='') s.deliveryFee = 0;
+            if(s.subtotal===undefined || s.subtotal===null || s.subtotal===''){
+              var sub = 0;
+              for(var ii=0; ii<(s.items||[]).length; ii++){
+                sub += (Number(s.items[ii].price)||0) * (Number(s.items[ii].qty)||0);
+              }
+              s.subtotal = sub;
+            }
+            if(s.total===undefined || s.total===null || s.total===''){
+              s.total = (Number(s.subtotal)||0) + (Number(s.deliveryFee)||0);
+            }
+          }
+        }catch(e){}
+
       }
       // ürünlerde olup listede olmayan kategorileri state.categories'e ekle
       try{
@@ -1739,100 +1751,6 @@ var SHEETS_SYNC = {
       var el = document.getElementById(id);
       if(el) el.value = v;
     }
-    // --- Tarih Anahtarı (Europe/Istanbul) & Dönem Filtreleri ---
-    function istDateKeyFromDate(d){
-      try{
-        if(!(d instanceof Date)) d = new Date(d);
-        if(!d || isNaN(d.getTime())) return '';
-        var parts = new Intl.DateTimeFormat('en-CA', {timeZone:'Europe/Istanbul', year:'numeric', month:'2-digit', day:'2-digit'}).formatToParts(d);
-        var y='',m='',da='';
-        for(var i=0;i<parts.length;i++){
-          if(parts[i].type==='year') y=parts[i].value;
-          else if(parts[i].type==='month') m=parts[i].value;
-          else if(parts[i].type==='day') da=parts[i].value;
-        }
-        return y+'-'+m+'-'+da;
-      }catch(e){
-        try{
-          d = (d instanceof Date) ? d : new Date(d);
-          if(!d || isNaN(d.getTime())) return '';
-          var y = d.getFullYear();
-          var m = String(d.getMonth()+1).padStart(2,'0');
-          var da = String(d.getDate()).padStart(2,'0');
-          return y+'-'+m+'-'+da;
-        }catch(e2){ return ''; }
-      }
-    }
-    function todayKeyIST(){ return istDateKeyFromDate(new Date()); }
-
-    function utcDateFromKey(key){
-      var p = String(key||'').split('-');
-      if(p.length!==3) return null;
-      var y=Number(p[0]), m=Number(p[1]), d=Number(p[2]);
-      if(!y||!m||!d) return null;
-      return new Date(Date.UTC(y, m-1, d));
-    }
-    function keyFromUTCDate(dt){
-      var y=dt.getUTCFullYear();
-      var m=String(dt.getUTCMonth()+1).padStart(2,'0');
-      var d=String(dt.getUTCDate()).padStart(2,'0');
-      return y+'-'+m+'-'+d;
-    }
-    function weekStartKey(key){
-      var dt = utcDateFromKey(key);
-      if(!dt) return key;
-      var dow = dt.getUTCDay(); // 0=Pazar
-      var shift = (dow + 6) % 7; // Pazartesi=0
-      dt.setUTCDate(dt.getUTCDate() - shift);
-      return keyFromUTCDate(dt);
-    }
-    function monthStartKey(key){
-      var dt = utcDateFromKey(key);
-      if(!dt) return key;
-      dt.setUTCDate(1);
-      return keyFromUTCDate(dt);
-    }
-    function clampKeyRange(a,b){
-      a = (a||'').trim(); b = (b||'').trim();
-      if(!a && !b) return null;
-      if(a && b && a>b){ var t=a; a=b; b=t; }
-      return {start:a||'', end:b||''};
-    }
-    function keyInRange(key, range){
-      if(!range) return true;
-      if(range.start && key < range.start) return false;
-      if(range.end && key > range.end) return false;
-      return true;
-    }
-    function getPeriodRange(period, dayKey, startKey, endKey){
-      var t = todayKeyIST();
-      if(!period || period==='all' || period==='Hepsi') return null;
-      if(period==='day'){
-        return dayKey ? {start: dayKey, end: dayKey} : null;
-      }
-      if(period==='week'){
-        return {start: weekStartKey(t), end: t};
-      }
-      if(period==='month'){
-        return {start: monthStartKey(t), end: t};
-      }
-      if(period==='range'){
-        var r = clampKeyRange(startKey, endKey);
-        if(!r || (!r.start && !r.end)) return null;
-        return r;
-      }
-      return null;
-    }
-    function saleDateKey(s){
-      if(!s) return '';
-      if(s.dateKey) return s.dateKey;
-      try{
-        var dk = istDateKeyFromDate(new Date(s.date||''));
-        if(dk){ s.dateKey = dk; }
-        return dk || '';
-      }catch(e){ return ''; }
-    }
-
     function showSaveStatus(msg, type){
       var el = document.getElementById('saveStatus');
       if(!el) return;
@@ -1924,6 +1842,14 @@ var SHEETS_SYNC = {
       }
     }
 
+    function openSyncPanel(){
+      // Sidebar kapalıysa aç
+      var sb = document.getElementById('sidebar');
+      if(sb && !sb.classList.contains('open')) toggleSidebar();
+      var box = document.getElementById('syncBox');
+      if(box && box.scrollIntoView) box.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+
     function switchView(view){
       var items = document.querySelectorAll('.nav-item');
       for(var i=0;i<items.length;i++){
@@ -1961,17 +1887,6 @@ var SHEETS_SYNC = {
         if(ov) ov.classList.add('hidden');
       }
     }
-    function openSyncPanel(){
-      // Sidebar'ı aç ve Canlı Senkron kutusuna kaydır
-      toggleSidebar(false);
-      setTimeout(function(){
-        try{
-          var el = document.getElementById('syncBox');
-          if(el && el.scrollIntoView) el.scrollIntoView({behavior:'smooth', block:'center'});
-        }catch(e){}
-      }, 180);
-    }
-
 
     // ====== POS ======
     // Satış kanalları (şimdilik Trendyol Yemek pasif)
@@ -1993,6 +1908,85 @@ var SHEETS_SYNC = {
     var activeChannel = (getActiveSalesChannels()[0]) || 'Dükkan İçi';
     var activePayMethod = 'nakit';
     var cart = [];
+
+
+    // ====== TIMEZONE SAFE DATEKEY (Europe/Istanbul) ======
+    function istanbulDateKeyFromDate(d){
+      try{
+        return new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Europe/Istanbul',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).format(d);
+      }catch(e){
+        // fallback: local date
+        var y = d.getFullYear();
+        var m = String(d.getMonth()+1).padStart(2,'0');
+        var da = String(d.getDate()).padStart(2,'0');
+        return y+'-'+m+'-'+da;
+      }
+    }
+    function istanbulDateKeyFromIso(iso){
+      if(!iso) return '';
+      var d = new Date(iso);
+      if(isNaN(d.getTime())) return '';
+      return istanbulDateKeyFromDate(d);
+    }
+
+    // ====== CHANNEL-BASED PRICING ======
+    function ensureProductPrices(p){
+      if(!p) return;
+      if(!p.prices || typeof p.prices !== 'object') p.prices = {};
+      var base = Number(p.price)||0;
+
+      // Dükkan içi her zaman base ile uyumlu olsun
+      if(p.prices['Dükkan İçi']===undefined || p.prices['Dükkan İçi']===null || p.prices['Dükkan İçi']===''){
+        p.prices['Dükkan İçi'] = base;
+      }
+      // diğer kanallar boşsa base'e düşer (saklamaya gerek yok ama edit kolaylığı)
+      try{
+        for(var i=0;i<(state.salesChannels||[]).length;i++){
+          var ch = state.salesChannels[i];
+          if(!ch) continue;
+        if(ch==='Dükkan İçi') continue;
+          if(p.prices[ch]===undefined || p.prices[ch]===null || p.prices[ch]===''){
+            // sadece Dükkan içi zorunlu; diğerleri boş kalabilir (fallback çalışır)
+          }
+        }
+      }catch(e){}
+    }
+
+    function getProductPrice(p, channel){
+      if(!p) return 0;
+      var ch = String(channel||'').trim();
+      if(p.prices && ch && p.prices[ch]!==undefined && p.prices[ch]!==null && p.prices[ch]!==''){
+        return Number(p.prices[ch])||0;
+      }
+      return Number(p.price)||0;
+    }
+
+    function syncCartPricesToChannel(){
+      var b = getBranch();
+      if(!b) return;
+      for(var i=0;i<cart.length;i++){
+        var it = cart[i];
+        var p = findProduct(b.products, it.id);
+        if(p){
+          ensureProductPrices(p);
+          it.price = getProductPrice(p, activeChannel);
+        }
+      }
+    }
+
+    // ====== TELEFON KURYE ÜCRETİ ======
+    function isPhoneChannel(ch){
+      return String(ch||'').trim().toLowerCase() === 'telefon';
+    }
+    function getDeliveryFee(){
+      if(!isPhoneChannel(activeChannel)) return 0;
+      return Number(getVal('deliveryFee')||0) || 0;
+    }
 
     function renderPayButtons(){
       var el = document.getElementById('payButtons');
@@ -2060,7 +2054,7 @@ var SHEETS_SYNC = {
           +   '<div class="pico">'+esc(p.icon || getCategoryIcon(p.cat))+'</div>'
           +   '<div style="min-width:0;">'
           +     '<b class="pname">'+esc(p.name)+'</b>'
-+     '<div class="price">'+Number(p.price).toFixed(2)+' ₺</div>'
+          +     '<div class="price">'+Number(getProductPrice(p, activeChannel)).toFixed(2)+' ₺</div>'
           +     '<div class="'+stockCls+'">'+esc(stockText)+'</div>'
           +   '</div>'
           + '</div>';
@@ -2092,6 +2086,10 @@ var SHEETS_SYNC = {
         while(el && el!==channelButtons && !el.getAttribute('data-channel')) el = el.parentElement;
         if(el && el.getAttribute('data-channel')){
           activeChannel = el.getAttribute('data-channel');
+          // Kanal değiştiyse sepetteki fiyatları güncelle
+          syncCartPricesToChannel();
+          // Telefon dışına çıkınca kurye ücretini sıfırla
+          if(!isPhoneChannel(activeChannel)) setVal('deliveryFee','');
           renderPOS();
         }
       };
@@ -2100,12 +2098,17 @@ var SHEETS_SYNC = {
       renderPayButtons();
     }
 
-    function calcCartTotal(){
+    function calcCartSubtotal(){
       var t = 0;
       for(var i=0;i<cart.length;i++){
         t += (Number(cart[i].price)||0) * (Number(cart[i].qty)||0);
       }
       return t;
+    }
+
+    function calcCartTotal(){
+      var sub = calcCartSubtotal();
+      return sub + getDeliveryFee();
     }
 
     function renderCart(){
@@ -2114,7 +2117,10 @@ var SHEETS_SYNC = {
 
       if(cart.length===0){
         el.innerHTML = '<div class="cart-empty">Sepet boş</div>';
+        setText('cartSubtotal', '0.00 ₺');
         setText('cartTotal', '0.00 ₺');
+        var fr = document.getElementById('deliveryFeeRow');
+        if(fr) fr.style.display = 'none';
         return;
       }
 
@@ -2135,6 +2141,11 @@ var SHEETS_SYNC = {
       }
       el.innerHTML = html;
 
+      // Telefon kanalında kurye ücreti alanını göster
+      var feeRow = document.getElementById('deliveryFeeRow');
+      if(feeRow) feeRow.style.display = isPhoneChannel(activeChannel) ? 'block' : 'none';
+
+      setText('cartSubtotal', calcCartSubtotal().toFixed(2)+' ₺');
       setText('cartTotal', calcCartTotal().toFixed(2)+' ₺');
     }
 
@@ -2162,7 +2173,8 @@ var SHEETS_SYNC = {
         }
       }
 
-      cart.push({ id:p.id, name:p.name, price:Number(p.price)||0, qty:1 });
+      ensureProductPrices(p);
+      cart.push({ id:p.id, name:p.name, price:getProductPrice(p, activeChannel), qty:1 });
       renderCart();
     }
 
@@ -2222,13 +2234,18 @@ var SHEETS_SYNC = {
         p.stock = (Number(p.stock)||0) - (Number(it.qty)||0);
       }
 
-      var total = calcCartTotal();
+      var subtotal = calcCartSubtotal();
+      var deliveryFee = getDeliveryFee();
+      var total = subtotal + deliveryFee;
+
       var now = new Date();
       var sale = {
         id: newId(),
         date: now.toISOString(),
-        dateKey: istDateKeyFromDate(now),
+        dateKey: istanbulDateKeyFromDate(now),
         items: cloneItems(cart),
+        subtotal: subtotal,
+        deliveryFee: deliveryFee,
         total: total,
         method: activePayMethod,
         channel: activeChannel
@@ -2239,54 +2256,25 @@ var SHEETS_SYNC = {
       }
       save();
       cart = [];
+      setVal('deliveryFee','');
       renderPOS();
       alert('Satış kaydedildi!');
     }
 
     // ====== DASHBOARD / SALES TABLE ======
-    function getSalesRange(){
-      return getPeriodRange(getVal('salesPeriod'), getVal('salesDateFilter'), getVal('salesStartFilter'), getVal('salesEndFilter'));
-    }
-
-    function expenseDateKey(e){
-      if(!e) return '';
-      if(e.dateKey) return e.dateKey;
-      var d = (e.date||'');
-      if(d && d.indexOf('T')>0) d = d.slice(0,10);
-      e.dateKey = d;
-      return d || '';
-    }
-
-    function updateDashboardSummary(){
+    function renderDashboard(){
       var b = getBranch();
       if(!b) return;
 
-      var range = getSalesRange();
-      var turnover = 0, expense = 0, count = 0;
-
-      for(var i=0;i<b.sales.length;i++){
-        var s = b.sales[i];
-        var dk = saleDateKey(s);
-        if(range && !keyInRange(dk, range)) continue;
-        turnover += Number(s.total)||0;
-        count++;
-      }
-
-      for(i=0;i<b.expenses.length;i++){
-        var e = b.expenses[i];
-        var ek = expenseDateKey(e);
-        if(range && !keyInRange(ek, range)) continue;
-        expense += Number(e.amount)||0;
-      }
+      var turnover = 0, expense = 0;
+      for(var i=0;i<b.sales.length;i++) turnover += Number(b.sales[i].total)||0;
+      for(i=0;i<b.expenses.length;i++) expense += Number(b.expenses[i].amount)||0;
 
       setText('repTurnover', turnover.toFixed(2)+' ₺');
       setText('repExpense', expense.toFixed(2)+' ₺');
-      setText('repCount', String(count));
+      setText('repCount', String(b.sales.length));
       setText('repNet', (turnover-expense).toFixed(2)+' ₺');
-    }
 
-    function renderDashboard(){
-      updateDashboardSummary();
       filterSales();
     }
 
@@ -2331,65 +2319,30 @@ var SHEETS_SYNC = {
       tb.innerHTML = html || '<tr><td colspan="6" class="muted">Satış yok</td></tr>';
     }
 
-    var _lastSalesFiltered = [];
-
-    function onSalesPeriodChange(){
-      var p = getVal('salesPeriod');
-      var dayWrap = document.getElementById('salesDayWrap');
-      var rangeWrap = document.getElementById('salesRangeWrap');
-
-      if(dayWrap) dayWrap.style.display = (p==='day') ? '' : 'none';
-      if(rangeWrap) rangeWrap.style.display = (p==='range') ? '' : 'none';
-
-      // varsayılanlar
-      if(p==='day'){
-        if(!getVal('salesDateFilter')) setVal('salesDateFilter', todayKeyIST());
-      }else if(p==='range'){
-        if(!getVal('salesStartFilter')) setVal('salesStartFilter', todayKeyIST());
-        if(!getVal('salesEndFilter')) setVal('salesEndFilter', todayKeyIST());
-      }
-
-      filterSales();
-    }
-
     function filterSales(){
       var b = getBranch();
       if(!b) return;
 
-      var range = getSalesRange();
-
+      var dateFilter = getVal('salesDateFilter');
       var chFilter = getVal('salesChannelFilter');
-      var mFilter = getVal('salesMethodFilter');
       var q = (getVal('salesSearch')||'').toLowerCase().trim();
-
-      var minRaw = getVal('salesMinTotal');
-      var maxRaw = getVal('salesMaxTotal');
-      var minT = Number(minRaw);
-      var maxT = Number(maxRaw);
-      var hasMin = (minRaw !== '' && !isNaN(minT));
-      var hasMax = (maxRaw !== '' && !isNaN(maxT));
 
       var out = [];
       for(var i=0;i<b.sales.length;i++){
         var s = b.sales[i];
 
-        var dk = saleDateKey(s);
-        if(range && !keyInRange(dk, range)) continue;
+        if(dateFilter){
+          var sKey = s.dateKey || istanbulDateKeyFromIso(s.date);
+          if(sKey !== dateFilter) continue;
+        }
 
         if(chFilter && chFilter!=='Hepsi'){
           if((s.channel||'') !== chFilter) continue;
         }
-        if(mFilter && mFilter!=='Hepsi'){
-          if((s.method||'') !== mFilter) continue;
-        }
-
-        var total = Number(s.total)||0;
-        if(hasMin && total < minT) continue;
-        if(hasMax && total > maxT) continue;
 
         if(q){
           var hay = (String(s.id)+' '+(s.channel||'')+' '+(s.method||'')+' ');
-          for(var j=0;j<(s.items||[]).length;j++){
+          for(var j=0;j<s.items.length;j++){
             hay += (s.items[j].name||'')+' ';
           }
           if(hay.toLowerCase().indexOf(q)===-1) continue;
@@ -2398,8 +2351,6 @@ var SHEETS_SYNC = {
         out.push(s);
       }
 
-      _lastSalesFiltered = out.slice();
-      updateDashboardSummary();
       renderSalesTable(out);
     }
 
@@ -2454,6 +2405,17 @@ var SHEETS_SYNC = {
       renderSalesChannelFilter(sale.channel);
       setVal('editSaleChannel', sale.channel || getActiveSalesChannels()[0] || 'Dükkan İçi');
       setVal('editSaleMethod', sale.method || 'nakit');
+      setVal('editDeliveryFee', (sale.deliveryFee!==undefined && sale.deliveryFee!==null) ? String(Number(sale.deliveryFee)||0) : '');
+
+      // Kanal değişince fiyatları yeni kanala göre güncelle
+      var chSel = document.getElementById('editSaleChannel');
+      if(chSel){
+        chSel.onchange = function(){
+          var newCh = getVal('editSaleChannel');
+          repriceDraftItemsForChannel(newCh);
+          renderEditSaleItems();
+        };
+      }
 
       renderEditSaleItems();
       document.getElementById('editModal').classList.remove('hidden');
@@ -2504,7 +2466,7 @@ var SHEETS_SYNC = {
 
       el.innerHTML = html;
 
-      setText('editSaleTotal', calcItemsTotal(saleDraft.items).toFixed(2)+' ₺');
+      updateEditSaleTotals();
     }
 
     function calcItemsTotal(items){
@@ -2514,6 +2476,49 @@ var SHEETS_SYNC = {
       }
       return t;
     }
+
+    function repriceDraftItemsForChannel(channel){
+      if(!saleDraft) return;
+      var b = getBranch();
+      for(var i=0;i<saleDraft.items.length;i++){
+        var it = saleDraft.items[i];
+        var p = findProduct(b.products, it.id);
+        if(p){
+          // Eğer ürün fiyatı kanala göre tanımlıysa yeni fiyata geç
+          if(p.prices && p.prices[channel]!==undefined && p.prices[channel]!==null && p.prices[channel]!==''){
+            it.price = Number(p.prices[channel])||0;
+          }else{
+            // fallback: dükkan fiyatı / mevcut
+            if(p.price!==undefined && p.price!==null) it.price = Number(p.price)||0;
+          }
+        }
+      }
+    }
+
+    function updateEditSaleTotals(){
+      if(!saleDraft) return;
+      var ch = getVal('editSaleChannel') || saleDraft.channel || 'Dükkan İçi';
+
+      // telefon ise kurye alanı açık
+      var feeRow = document.getElementById('editDeliveryFeeRow');
+      if(feeRow) feeRow.style.display = (String(ch).trim().toLowerCase()==='telefon') ? 'block' : 'none';
+
+      var sub = calcItemsTotal(saleDraft.items || []);
+      var fee = 0;
+      if(String(ch).trim().toLowerCase()==='telefon'){
+        fee = Number(getVal('editDeliveryFee')||0) || 0;
+      }else{
+        setVal('editDeliveryFee','');
+      }
+
+      saleDraft.subtotal = sub;
+      saleDraft.deliveryFee = fee;
+      saleDraft.total = sub + fee;
+
+      setText('editSaleSubtotal', sub.toFixed(2)+' ₺');
+      setText('editSaleTotal', (sub+fee).toFixed(2)+' ₺');
+    }
+
 
     function editSaleQty(pid, delta){
       if(!saleDraft || !saleOriginalSnapshot) return;
@@ -2596,7 +2601,14 @@ var SHEETS_SYNC = {
       sale.method = newMethod;
       sale.channel = newChannel;
       sale.items = cloneItems(saleDraft.items);
-      sale.total = calcItemsTotal(sale.items);
+
+      // Totaller (telefon kurye dahil)
+      sale.subtotal = calcItemsTotal(sale.items);
+      sale.deliveryFee = (String(newChannel).trim().toLowerCase()==='telefon') ? (Number(getVal('editDeliveryFee')||0) || 0) : 0;
+      sale.total = (Number(sale.subtotal)||0) + (Number(sale.deliveryFee)||0);
+
+      // dateKey yoksa geri doldur
+      if(!sale.dateKey) sale.dateKey = istanbulDateKeyFromIso(sale.date);
 
       save();
       closeEditModal();
@@ -2633,14 +2645,40 @@ var SHEETS_SYNC = {
     }
 
     // ====== INVENTORY ======
+
+    function renderChannelPriceFields(prices){
+      var wrap = document.getElementById('channelPriceFields');
+      if(!wrap) return;
+
+      var chans = state.salesChannels || [];
+      var html = '';
+      for(var i=0;i<chans.length;i++){
+        var ch = String(chans[i]||'').trim();
+        if(!ch) continue;
+        if(ch==='Dükkan İçi') continue;
+
+        var v = '';
+        if(prices && prices[ch]!==undefined && prices[ch]!==null && prices[ch]!==''){
+          v = String(prices[ch]);
+        }
+
+        html += '<div>'
+          +   '<div class="muted" style="font-size:12px; margin-bottom:6px;">'+esc(ch)+'</div>'
+          +   '<input class="pChPrice" data-channel="'+esc(ch)+'" type="number" step="0.01" min="0" placeholder="(boş)" value="'+esc(v)+'">'
+          + '</div>';
+      }
+      wrap.innerHTML = html;
+    }
+
+
     function resetProductForm(){
       setVal('pId','');
       setVal('pName','');
       setVal('pPrice','');
       setVal('pStock','');
       setVal('pIcon','');
-      setVal('pDesc','');
       if(state.categories && state.categories[0]) setVal('pCat', state.categories[0]);
+      renderChannelPriceFields(null);
     }
 
     function saveProduct(){
@@ -2651,7 +2689,21 @@ var SHEETS_SYNC = {
       var price = Number(getVal('pPrice')||0);
       var stock = Number(getVal('pStock')||0);
       var icon = getVal('pIcon').trim();
-      var desc = getVal('pDesc').trim();
+
+      // Kanal bazlı fiyatlar
+      var prices = { 'Dükkan İçi': price };
+      try{
+        var nodes = document.querySelectorAll('#channelPriceFields .pChPrice');
+        for(var pi=0; pi<nodes.length; pi++){
+          var ch = nodes[pi].getAttribute('data-channel') || '';
+          ch = String(ch).trim();
+          if(!ch || ch==='Dükkan İçi') continue;
+          var vv = (nodes[pi].value||'').trim();
+          if(vv!==''){
+            prices[ch] = Number(vv)||0;
+          }
+        }
+      }catch(e){}
 
       if(!name){ alert('Ürün adı boş olamaz'); return; }
       if(!cat){ alert('Kategori seç'); return; }
@@ -2665,7 +2717,7 @@ var SHEETS_SYNC = {
         p.price = price;
         p.stock = stock;
         p.icon = icon;
-        p.description = desc;
+        p.prices = prices;
       }else{
         // new
         var id = newId();
@@ -2676,7 +2728,7 @@ var SHEETS_SYNC = {
           price:price,
           stock:stock,
           icon:icon,
-          description:desc
+          prices: prices
         });
       }
 
@@ -2696,7 +2748,7 @@ var SHEETS_SYNC = {
       setVal('pPrice', p.price);
       setVal('pStock', p.stock);
       setVal('pIcon', p.icon||'');
-      setVal('pDesc', p.description||'');
+      renderChannelPriceFields(p.prices || null);
       switchView('inventory');
     }
 
@@ -2738,6 +2790,19 @@ var SHEETS_SYNC = {
         }
         sel2.innerHTML = html2;
       }
+
+      var sel3 = document.getElementById('invPriceChannel');
+      if(sel3){
+        var html3 = '';
+        var chans = getActiveSalesChannels();
+        for(i=0;i<chans.length;i++){
+          html3 += '<option value="'+esc(chans[i])+'">'+esc(chans[i])+'</option>';
+        }
+        sel3.innerHTML = html3;
+        if(!sel3.value && chans[0]) sel3.value = chans[0];
+      }
+
+      renderChannelPriceFields(null);
     }
 
     function filterProducts(){
@@ -2765,7 +2830,7 @@ var SHEETS_SYNC = {
         html += '<tr>'
           + '<td>'+esc(p.icon||'')+' '+esc(p.name)+'</td>'
           + '<td>'+esc(p.cat||'')+'</td>'
-          + '<td>'+Number(p.price||0).toFixed(2)+' ₺</td>'
+          + '<td>'+Number(getProductPrice(p, (getVal('invPriceChannel')||'Dükkan İçi'))).toFixed(2)+' ₺</td>'
           + '<td>'+Number(p.stock||0)+'</td>'
           + '<td>'
           +   '<button class="btn btn-sm" type="button" onclick="editProduct('+p.id+')">✏️</button> '
@@ -2851,75 +2916,22 @@ alert('Gider eklendi!');
       renderAll();
     }
 
-    var _lastExpensesFiltered = [];
-
-    function onExpPeriodChange(){
-      var p = getVal('expPeriod');
-      var dayWrap = document.getElementById('expDayWrap');
-      var rangeWrap = document.getElementById('expRangeWrap');
-
-      if(dayWrap) dayWrap.style.display = (p==='day') ? '' : 'none';
-      if(rangeWrap) rangeWrap.style.display = (p==='range') ? '' : 'none';
-
-      if(p==='day'){
-        if(!getVal('expDayFilter')) setVal('expDayFilter', todayKeyIST());
-      }else if(p==='range'){
-        if(!getVal('expStartFilter')) setVal('expStartFilter', todayKeyIST());
-        if(!getVal('expEndFilter')) setVal('expEndFilter', todayKeyIST());
-      }
-
-      filterExpenses();
-    }
-
-    function getExpensesRange(){
-      return getPeriodRange(getVal('expPeriod'), getVal('expDayFilter'), getVal('expStartFilter'), getVal('expEndFilter'));
-    }
-
     function filterExpenses(){
       var b = getBranch();
-      if(!b) return;
-
-      var range = getExpensesRange();
-
       var type = getVal('expTypeFilter');
       var q = (getVal('expSearch')||'').toLowerCase().trim();
 
-      var minRaw = getVal('expMinAmount');
-      var maxRaw = getVal('expMaxAmount');
-      var minA = Number(minRaw);
-      var maxA = Number(maxRaw);
-      var hasMin = (minRaw !== '' && !isNaN(minA));
-      var hasMax = (maxRaw !== '' && !isNaN(maxA));
-
       var out = [];
-      var sum = 0;
       for(var i=0;i<b.expenses.length;i++){
         var e = b.expenses[i];
-        var ek = expenseDateKey(e);
-        if(range && !keyInRange(ek, range)) continue;
-
         if(type && type!=='Hepsi' && e.type!==type) continue;
-
-        var amt = Number(e.amount)||0;
-        if(hasMin && amt < minA) continue;
-        if(hasMax && amt > maxA) continue;
-
         if(q){
           var hay = (e.desc||'')+' '+(e.type||'');
           if(hay.toLowerCase().indexOf(q)===-1) continue;
         }
-
         out.push(e);
-        sum += amt;
       }
-
-      _lastExpensesFiltered = out.slice();
       renderExpensesTable(out);
-
-      var sumEl = document.getElementById('expFilteredSummary');
-      if(sumEl){
-        sumEl.textContent = 'Filtre: ' + out.length + ' kayıt — Toplam: ' + sum.toFixed(2) + ' ₺';
-      }
     }
 
     function renderExpensesTable(list){
@@ -2965,90 +2977,6 @@ alert('Gider eklendi!');
       URL.revokeObjectURL(url);
     }
 
-    function csvEsc(v){
-      v = (v==null) ? '' : String(v);
-      if(v.indexOf('"')!==-1) v = v.replace(/"/g,'""');
-      if(v.indexOf(';')!==-1 || v.indexOf('\n')!==-1 || v.indexOf('\r')!==-1) v = '"' + v + '"';
-      return v;
-    }
-    function downloadTextFile(filename, mime, content){
-      try{
-        var blob = new Blob([content], {type: mime || 'text/plain'});
-        var url = URL.createObjectURL(blob);
-        var a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-      }catch(e){
-        alert('İndirme hatası');
-      }
-    }
-
-    function exportSalesCSV(){
-      var b = getBranch();
-      if(!b) return;
-      var list = (_lastSalesFiltered != null) ? _lastSalesFiltered : (b.sales||[]);
-      list = (list||[]).slice().sort(function(a,b){ return (new Date(a.date)) - (new Date(b.date)); });
-
-      var lines = [];
-      lines.push(['Tarih','Saat','TarihKey','Kanal','Ödeme','Toplam','Ürünler','ID'].join(';'));
-
-      for(var i=0;i<list.length;i++){
-        var s = list[i];
-        var d = new Date(s.date);
-        var dateStr = istDateKeyFromDate(d);
-        var timeStr = '';
-        try{ timeStr = d.toLocaleTimeString('tr-TR'); }catch(e){ timeStr = ''; }
-
-        var items = '';
-        for(var j=0;j<(s.items||[]).length;j++){
-          items += (s.items[j].name||'') + ' x' + (s.items[j].qty||0) + (j<(s.items||[]).length-1 ? ', ' : '');
-        }
-
-        lines.push([
-          dateStr,
-          timeStr,
-          saleDateKey(s),
-          (s.channel||''),
-          (s.method||''),
-          Number(s.total||0).toFixed(2),
-          items,
-          String(s.id||'')
-        ].map(csvEsc).join(';'));
-      }
-
-      var filename = 'satis_raporu_' + todayKeyIST() + '.csv';
-      downloadTextFile(filename, 'text/csv;charset=utf-8', lines.join('\n'));
-    }
-
-    function exportExpensesCSV(){
-      var b = getBranch();
-      if(!b) return;
-      var list = (_lastExpensesFiltered != null) ? _lastExpensesFiltered : (b.expenses||[]);
-      list = (list||[]).slice().sort(function(a,b){ return (new Date(a.date)) - (new Date(b.date)); });
-
-      var lines = [];
-      lines.push(['Tarih','TarihKey','Tip','Açıklama','Tutar','ID'].join(';'));
-
-      for(var i=0;i<list.length;i++){
-        var e = list[i];
-        lines.push([
-          (e.date||''),
-          expenseDateKey(e),
-          (e.type||''),
-          (e.desc||''),
-          Number(e.amount||0).toFixed(2),
-          String(e.id||'')
-        ].map(csvEsc).join(';'));
-      }
-
-      var filename = 'gider_raporu_' + todayKeyIST() + '.csv';
-      downloadTextFile(filename, 'text/csv;charset=utf-8', lines.join('\n'));
-    }
-
     function importBackupFile(file){
       var fr = new FileReader();
       fr.onload = function(){
@@ -3083,7 +3011,7 @@ alert('Gider eklendi!');
       if(active){
         var id = active.id.replace('view-','');
         if(id==='pos') renderPOS();
-        if(id==='dashboard'){ renderDashboard(); }
+        if(id==='dashboard'){ renderDashboard(); renderSalesTable(); }
         if(id==='inventory') renderInventory();
         if(id==='expenses') renderExpenses();
       }
@@ -3121,8 +3049,6 @@ alert('Gider eklendi!');
       var pushTimer = null;
       var pullTimer = null;
       var pullInFlight = false;
-      var remoteRevCache = null;
-      var remoteCheckAt = 0;
 
       function nowIso(){ return new Date().toISOString(); }
       // --- TOKEN PERSIST / AUTO-RECONNECT (sessionStorage + silent refresh) ---
@@ -3226,11 +3152,23 @@ alert('Gider eklendi!');
           el.className = 'sync-pill ' + cls;
           el.textContent = txt;
         }
-        // üst çubuk simgesi
-        var dot = document.getElementById('syncDotTop');
-        if(dot){
-          dot.className = 'sync-dot ' + cls;
-        }
+
+        // Topbar göstergesi
+        try{
+          var dot = document.getElementById('syncDotTop');
+          var lab = document.getElementById('syncTopLabel');
+          if(dot){
+            var tcls = 'warn';
+            if(String(cls).indexOf('sync-ok')!==-1) tcls = 'ok';
+            else if(String(cls).indexOf('sync-bad')!==-1) tcls = 'bad';
+            else tcls = 'warn';
+            dot.className = 'sync-dot ' + tcls;
+          }
+          if(lab){
+            // kısa metin
+            lab.textContent = txt || 'Senkron';
+          }
+        }catch(e){}
       }
       function setLast(txt){
         var el = document.getElementById('syncLast');
@@ -3454,29 +3392,7 @@ alert('Gider eklendi!');
         pushTimer = setTimeout(function(){ push(); }, 600);
       }
 
-      function fetchRemoteMeta(force){
-        if(!SHEETS_SYNC.enabled) return Promise.resolve({rev:0, updatedAt:''});
-        if(!accessToken) return Promise.reject(new Error('no_token'));
-
-        // kısa süreli cache
-        if(!force && remoteRevCache && (Date.now() - remoteCheckAt) < 5000){
-          return Promise.resolve(remoteRevCache);
-        }
-
-        var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + encodeURIComponent(SHEETS_SYNC.spreadsheetId)
-          + '/values/' + encodeURIComponent(SHEETS_SYNC.range) + '?majorDimension=ROWS';
-
-        return sheetsFetch(url).then(function(data){
-          var row = (data && data.values && data.values[0]) ? data.values[0] : null;
-          var rev = (row && row[0]) ? Number(row[0]) : 0;
-          var updatedAt = (row && row[1]) ? row[1] : '';
-          remoteRevCache = {rev: (rev||0), updatedAt: (updatedAt||'')};
-          remoteCheckAt = Date.now();
-          return remoteRevCache;
-        });
-      }
-
-      function push(force){
+      function push(){
         if(!SHEETS_SYNC.enabled) return;
         if(isApplyingRemote) return;
 
@@ -3485,61 +3401,27 @@ alert('Gider eklendi!');
           return;
         }
 
-        function doPut(){
-          var rev = Date.now(); // basit rev
-          var values = [[ String(rev), nowIso(), deviceId, JSON.stringify(state) ]];
+        if(pullInFlight) return;
+        pullInFlight = true;
 
-          var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + encodeURIComponent(SHEETS_SYNC.spreadsheetId)
-            + '/values/' + encodeURIComponent(SHEETS_SYNC.range) + '?valueInputOption=RAW';
+        var rev = Date.now(); // basit rev
+        var values = [[ String(rev), nowIso(), deviceId, JSON.stringify(state) ]];
 
-          pill('sync-warn','⬆️ Gönderiliyor…');
+        var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + encodeURIComponent(SHEETS_SYNC.spreadsheetId)
+          + '/values/' + encodeURIComponent(SHEETS_SYNC.range) + '?valueInputOption=RAW';
 
-          sheetsFetch(url, {
-            method:'PUT',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ range: SHEETS_SYNC.range, majorDimension:'ROWS', values: values })
-          }).then(function(){
-            // push başarılı -> rev'i güncelle
-            lastPullRev = rev;
-            localStorage.setItem('SHEETS_LAST_PULL_REV', String(lastPullRev));
-            remoteRevCache = {rev: rev, updatedAt: nowIso()};
-            remoteCheckAt = Date.now();
+        pill('sync-warn','⬆️ Gönderiliyor…');
 
-            pill('sync-ok','✅ Senkron');
-            setLast(nowIso());
-          }).catch(function(err){
-            console.warn(err);
-            pill('sync-bad','❌ Gönderme hata');
-          });
-        }
-
-        // Çakışma kontrolü: otomatikte üzerine yazma; manuelde sor
-        fetchRemoteMeta(false).then(function(meta){
-          if(meta && meta.rev && meta.rev > lastPullRev){
-            if(force){
-              var ok = confirm('Başka cihazda daha yeni veri var. Üzerine yazılsın mı?');
-              if(!ok){
-                pill('sync-warn','⚠️ İptal');
-                return;
-              }
-              doPut();
-              return;
-            }else{
-              pill('sync-warn','⚠️ Çakışma: önce ⬇️ Çek');
-              setLast(meta.updatedAt || nowIso());
-              return;
-            }
-          }
-          doPut();
+        sheetsFetch(url, {
+          method:'PUT',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ range: SHEETS_SYNC.range, majorDimension:'ROWS', values: values })
+        }).then(function(){
+          pill('sync-ok','✅ Senkron');
+          setLast(nowIso());
         }).catch(function(err){
-          if(force){
-            var ok2 = confirm('Senkron ön kontrolü yapılamadı. Yine de gönderilsin mi?');
-            if(ok2) doPut();
-            else pill('sync-warn','⚠️ İptal');
-          }else{
-            // otomatik: güvenli olsun diye bekle
-            pill('sync-warn','⏳ Bekle');
-          }
+          console.warn(err);
+          pill('sync-bad','❌ Gönderme hata');
         });
       }
 
@@ -3549,10 +3431,9 @@ alert('Gider eklendi!');
           pill('sync-warn','🔐 Bağlan');
           return;
         }
+
         if(pullInFlight) return;
         pullInFlight = true;
-
-        function done(){ pullInFlight = false; }
 
         var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + encodeURIComponent(SHEETS_SYNC.spreadsheetId)
           + '/values/' + encodeURIComponent(SHEETS_SYNC.range) + '?majorDimension=ROWS';
@@ -3563,21 +3444,15 @@ alert('Gider eklendi!');
           var row = (data && data.values && data.values[0]) ? data.values[0] : null;
           if(!row || row.length < 4){
             pill('sync-warn','ℹ️ Boş');
-            done();
             return;
           }
           var rev = Number(row[0] || 0);
           var updatedAt = row[1] || '';
           var remoteJson = row[3] || '';
 
-          // meta cache
-          remoteRevCache = {rev: rev, updatedAt: updatedAt||''};
-          remoteCheckAt = Date.now();
-
           if(rev <= lastPullRev){
             pill('sync-ok','✅ Güncel');
             setLast(updatedAt || nowIso());
-            done();
             return;
           }
 
@@ -3585,7 +3460,6 @@ alert('Gider eklendi!');
           try{ remoteState = JSON.parse(remoteJson); }catch(e){ remoteState=null; }
           if(!remoteState){
             pill('sync-bad','❌ JSON bozuk');
-            done();
             return;
           }
 
@@ -3600,11 +3474,11 @@ alert('Gider eklendi!');
 
           pill('sync-ok','✅ Güncellendi');
           setLast(updatedAt || nowIso());
-          done();
         }).catch(function(err){
           console.warn(err);
           pill('sync-bad','❌ Çekme hata');
-          done();
+        }).then(function(){
+          pullInFlight = false;
         });
       }
 
@@ -3646,7 +3520,7 @@ return {
 
       if(btnC) btnC.onclick = function(){ SheetsSync.connect(); };
       if(btnPull) btnPull.onclick = function(){ SheetsSync.pull(); };
-      if(btnPush) btnPush.onclick = function(){ SheetsSync.push(true); };
+      if(btnPush) btnPush.onclick = function(){ SheetsSync.push(); };
     }
 
     function init(){
@@ -3666,14 +3540,6 @@ return {
       // default tarih alanları
       resetExpenseForm();
 
-      // rapor dönemleri (satış/gider)
-      try{
-        if(document.getElementById('salesPeriod') && !getVal('salesPeriod')) setVal('salesPeriod','all');
-        if(document.getElementById('expPeriod') && !getVal('expPeriod')) setVal('expPeriod','all');
-        onSalesPeriodChange();
-        onExpPeriodChange();
-      }catch(e){}
-
       // ilk render
       renderAll();
 
@@ -3687,10 +3553,9 @@ return {
 
     // ====== PWA CACHE (offline) ======
     (function(){
-      // Service Worker (offline)
       try{
         if("serviceWorker" in navigator){
-          navigator.serviceWorker.register("./sw.js").catch(()=>{});
+          navigator.serviceWorker.register("./sw.js").catch(function(){});
         }
       }catch(e){}
     })();
