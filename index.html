@@ -1467,21 +1467,6 @@ var SHEETS_SYNC = {
         hastane: { name:'Hastane Şubesi', products:[], sales:[], expenses:[] },
         cihanpol:{ name:'Cihanpol Şubesi', products:[], sales:[], expenses:[] }
       }
-
-      var sel3 = document.getElementById('invPriceChannel');
-      if(sel3){
-        var html3 = '';
-        var chans = getActiveSalesChannels();
-        for(i=0;i<chans.length;i++){
-          html3 += '<option value="'+esc(chans[i])+'">'+esc(chans[i])+'</option>';
-        }
-        sel3.innerHTML = html3;
-        // boş ise ilk kanalı seç
-        if(!sel3.value && chans[0]) sel3.value = chans[0];
-      }
-
-      // form ilk açılışta alanları hazırla
-      renderChannelPriceFields(null);
     };
 
     // Default ürünleri JSON scriptlerden oku ve DEFAULTS içine koy
