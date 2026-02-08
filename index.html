@@ -2365,6 +2365,11 @@ var SHEETS_SYNC = {
     // ====== POS ======
     // Satış kanalları (şimdilik Trendyol Yemek pasif)
     var INACTIVE_SALES_CHANNELS = ['Getir','Trendyol Yemek'];
+    function isInactiveChannel(ch){
+      ch = String(ch||'').trim();
+      return INACTIVE_SALES_CHANNELS.indexOf(ch)!==-1;
+    }
+
     function getActiveSalesChannels(){
       var arr = (state && Array.isArray(state.salesChannels)) ? state.salesChannels : [];
       var out = [];
@@ -3862,6 +3867,12 @@ alert('Gider eklendi!');
           opsQueue = batch.concat(opsQueue);
           saveOpsQueue();
         });
+      }
+
+      var flushOpsTimer = null;
+      function flushOpsQueueDebounced(){
+        if(flushOpsTimer) clearTimeout(flushOpsTimer);
+        flushOpsTimer = setTimeout(function(){ flushOpsQueue(); }, 400);
       }
 
       function logSale(branchKey, sale){
