@@ -327,12 +327,9 @@
       gap:14px;
       align-items:start;
     }
-    .pos-tools{
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-      align-items:flex-start;
-    }
+    .pos-tools{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+@media(max-width:980px){.pos-tools{grid-template-columns:1fr}}
+
 
     /* POS grid: auto-fit */
     .product-grid{
@@ -707,11 +704,7 @@
               <div class="muted">Ara Toplam</div>
               <div class="cart-total" id="cartSubtotal">0.00 ₺</div>
             </div>
-
-            <div id="deliveryFeeRow" style="display:none; margin-top:10px;">
-              <div class="muted" style="font-size:12px; margin-bottom:6px;">Kurye Ücreti (Telefon)</div>
-              <input id="deliveryFee" type="number" step="0.01" min="0" placeholder="0.00" oninput="renderCart()">
-            </div>
+</div>
 
             <div class="cart-summary" style="margin-top:10px;">
               <div class="muted">Toplam</div>
@@ -980,12 +973,7 @@
                 </select>
               </div>
             </div>
-
-            
-            <div id="editDeliveryFeeRow" style="display:none; margin-top:12px;">
-              <div class="muted" style="font-size:12px; margin-bottom:6px;">Kurye Ücreti (Telefon)</div>
-              <input id="editDeliveryFee" type="number" step="0.01" min="0" placeholder="0.00" oninput="updateEditSaleTotals()">
-            </div>
+</div>
 
 <div style="margin-top:12px;">
               <div class="muted" style="font-size:12px; margin-bottom:6px;">Ürünler</div>
@@ -1016,430 +1004,14 @@
   <!-- Şube 1: Hastane Şubesi Ürünleri -->
   <script type="application/json" id="branchHastaneProducts">
   
-[
-    {
-        "id": 3,
-        "name": "Tombik 90gr",
-        "cat": "Tombikler",
-        "price": 65,
-        "stock": 60,
-        "icon": "🥙",
-        "description": "Normal boy tombik"
-    },
-    {
-        "id": 4,
-        "name": "Mega Tombik 130gr",
-        "cat": "Tombikler",
-        "price": 90,
-        "stock": 50,
-        "icon": "🥙",
-        "description": "Mega boy tombik"
-    },
-    {
-        "id": 5,
-        "name": "Çiğ Köfte 250gr",
-        "cat": "Çiğ Köfte",
-        "price": 90,
-        "stock": 40,
-        "icon": "🥗",
-        "description": "250gr porsiyon"
-    },
-    {
-        "id": 6,
-        "name": "Çiğ Köfte 500gr",
-        "cat": "Çiğ Köfte",
-        "price": 170,
-        "stock": 30,
-        "icon": "🥗",
-        "description": "500gr porsiyon"
-    },
-    {
-        "id": 7,
-        "name": "Çiğ Köfte 1kg",
-        "cat": "Çiğ Köfte",
-        "price": 320,
-        "stock": 20,
-        "icon": "🥗",
-        "description": "1kg paket"
-    },
-    {
-        "id": 8,
-        "name": "Ayran 200ml",
-        "cat": "İçecek",
-        "price": 15,
-        "stock": 120,
-        "icon": "🥛",
-        "description": "Soğuk ayran"
-    },
-    {
-        "id": 9,
-        "name": "Şalgam 300ml",
-        "cat": "İçecek",
-        "price": 20,
-        "stock": 90,
-        "icon": "🧃",
-        "description": "Acılı/Acısız"
-    },
-    {
-        "id": 10,
-        "name": "Kola 330ml",
-        "cat": "İçecek",
-        "price": 25,
-        "stock": 90,
-        "icon": "🥤",
-        "description": "Kutu kola"
-    },
-    {
-        "id": 11,
-        "name": "Fanta 330ml",
-        "cat": "İçecek",
-        "price": 25,
-        "stock": 80,
-        "icon": "🥤",
-        "description": "Kutu fanta"
-    },
-    {
-        "id": 12,
-        "name": "Su 500ml",
-        "cat": "İçecek",
-        "price": 10,
-        "stock": 200,
-        "icon": "💧",
-        "description": "Su"
-    },
-    {
-        "id": 13,
-        "name": "Soda",
-        "cat": "İçecek",
-        "price": 12,
-        "stock": 100,
-        "icon": "🫧",
-        "description": "Maden suyu"
-    },
-    {
-        "id": 14,
-        "name": "Nar Ekşisi",
-        "cat": "Ekstra",
-        "price": 10,
-        "stock": 60,
-        "icon": "🍯",
-        "description": "Ekstra sos"
-    },
-    {
-        "id": 15,
-        "name": "Acı Sos",
-        "cat": "Ekstra",
-        "price": 10,
-        "stock": 60,
-        "icon": "🌶️",
-        "description": "Ekstra acı"
-    },
-    {
-        "id": 16,
-        "name": "Lavaş",
-        "cat": "Ekstra",
-        "price": 5,
-        "stock": 200,
-        "icon": "🫓",
-        "description": "Tek lavaş"
-    },
-    {
-        "id": 17,
-        "name": "Marul",
-        "cat": "Ekstra",
-        "price": 5,
-        "stock": 150,
-        "icon": "🥬",
-        "description": "Tek marul"
-    },
-    {
-        "id": 18,
-        "name": "Turşu",
-        "cat": "Ekstra",
-        "price": 5,
-        "stock": 150,
-        "icon": "🥒",
-        "description": "Tek turşu"
-    },
-    {
-        "id": 19,
-        "name": "Patates Kızartması",
-        "cat": "Atıştırmalık",
-        "price": 40,
-        "stock": 35,
-        "icon": "🍟",
-        "description": "Porsiyon patates"
-    },
-    {
-        "id": 20,
-        "name": "Soğan Halkası",
-        "cat": "Atıştırmalık",
-        "price": 45,
-        "stock": 30,
-        "icon": "🧅",
-        "description": "Porsiyon soğan halkası"
-    },
-    {
-        "id": 21,
-        "name": "Soslu Patates",
-        "cat": "Atıştırmalık",
-        "price": 50,
-        "stock": 25,
-        "icon": "🍟",
-        "description": "Özel soslu"
-    },
-    {
-        "id": 22,
-        "name": "Tatlı",
-        "cat": "Tatlı",
-        "price": 35,
-        "stock": 20,
-        "icon": "🍰",
-        "description": "Günün tatlısı"
-    },
-    {
-        "id": 23,
-        "name": "Brownie",
-        "cat": "Tatlı",
-        "price": 40,
-        "stock": 15,
-        "icon": "🍫",
-        "description": "Brownie dilim"
-    },
-    {
-        "id": 24,
-        "name": "Künefe",
-        "cat": "Tatlı",
-        "price": 60,
-        "stock": 12,
-        "icon": "🧀",
-        "description": "Sıcak künefe"
-    },
-    {
-        "id": 25,
-        "name": "Çay",
-        "cat": "İçecek",
-        "price": 10,
-        "stock": 200,
-        "icon": "🍵",
-        "description": "Sıcak çay"
-    }
-]
+[{"id":26,"name":"Normal Dürüm","cat":"Dürümler","icon":"🌯","price":50.0,"prices":{"Telefon":60.0,"Yemeksepeti":80.0},"stock":200},{"id":27,"name":"Mega Dürüm","cat":"Dürümler","icon":"🌯","price":90.0,"prices":{"Telefon":100.0,"Yemeksepeti":120.0},"stock":200},{"id":28,"name":"Ultra Mega Dürüm","cat":"Dürümler","icon":"🌯","price":110.0,"prices":{"Telefon":120.0,"Yemeksepeti":125.0},"stock":200},{"id":29,"name":"Duble Dürüm","cat":"Dürümler","icon":"🌯","price":135.0,"prices":{"Telefon":140.0,"Yemeksepeti":140.0},"stock":200},{"id":30,"name":"250 GR Porsiyon","cat":"Çiğ Köfte","icon":"🥗","price":100.0,"prices":{"Telefon":100.0,"Yemeksepeti":110.0},"stock":80},{"id":31,"name":"350 GR Porsiyon","cat":"Çiğ Köfte","icon":"🥗","price":115.0,"prices":{"Telefon":115.0,"Yemeksepeti":150.0},"stock":80},{"id":32,"name":"500 GR Porsiyon","cat":"Çiğ Köfte","icon":"🥗","price":150.0,"prices":{"Telefon":150.0,"Yemeksepeti":190.0},"stock":80},{"id":33,"name":"750 GR Porsiyon","cat":"Çiğ Köfte","icon":"🥗","price":225.0,"prices":{"Telefon":225.0,"Yemeksepeti":280.0},"stock":80},{"id":34,"name":"1 KG Porsiyon","cat":"Çiğ Köfte","icon":"🥗","price":300.0,"prices":{"Telefon":300.0,"Yemeksepeti":370.0},"stock":80},{"id":35,"name":"Su","cat":"İçecek","icon":"💧","price":10.0,"prices":{"Telefon":15.0,"Yemeksepeti":20.0},"stock":200},{"id":36,"name":"Küçük Ayran","cat":"İçecek","icon":"🥛","price":15.0,"prices":{"Telefon":20.0,"Yemeksepeti":20.0},"stock":200},{"id":37,"name":"Büyük Ayran","cat":"İçecek","icon":"🥛","price":20.0,"prices":{"Telefon":25.0,"Yemeksepeti":30.0},"stock":200},{"id":38,"name":"Cam Kola","cat":"İçecek","icon":"🥤","price":35.0,"prices":{"Telefon":40.0,"Yemeksepeti":45.0},"stock":200},{"id":39,"name":"Cam Fanta","cat":"İçecek","icon":"🥤","price":35.0,"prices":{"Telefon":40.0,"Yemeksepeti":45.0},"stock":200},{"id":40,"name":"Kutu Kola","cat":"İçecek","icon":"🥤","price":50.0,"prices":{"Telefon":60.0,"Yemeksepeti":65.0},"stock":200},{"id":41,"name":"Kutu Fanta","cat":"İçecek","icon":"🥤","price":50.0,"prices":{"Telefon":60.0,"Yemeksepeti":65.0},"stock":200},{"id":42,"name":"İcetea Mango","cat":"Ek Paketler","icon":"📦","price":50.0,"prices":{"Telefon":60.0,"Yemeksepeti":65.0},"stock":400},{"id":43,"name":"İcetea Şeftali","cat":"Ek Paketler","icon":"📦","price":50.0,"prices":{"Telefon":60.0,"Yemeksepeti":65.0},"stock":400},{"id":44,"name":"İcetea Limon","cat":"Ek Paketler","icon":"📦","price":50.0,"prices":{"Telefon":60.0,"Yemeksepeti":65.0},"stock":400},{"id":45,"name":"İcetea Karpuz","cat":"Ek Paketler","icon":"📦","price":50.0,"prices":{"Telefon":60.0,"Yemeksepeti":65.0},"stock":400},{"id":46,"name":"İcetea Mango 1 LT","cat":"Ek Paketler","icon":"📦","price":60.0,"prices":{"Telefon":70.0,"Yemeksepeti":80.0},"stock":400},{"id":47,"name":"İcetea Şeftali 1 LT","cat":"Ek Paketler","icon":"📦","price":60.0,"prices":{"Telefon":70.0,"Yemeksepeti":80.0},"stock":400},{"id":48,"name":"İcetea Limon 1 LT","cat":"Ek Paketler","icon":"📦","price":60.0,"prices":{"Telefon":70.0,"Yemeksepeti":80.0},"stock":400},{"id":49,"name":"İcetea Karpuz 1 LT","cat":"Ek Paketler","icon":"📦","price":60.0,"prices":{"Telefon":70.0,"Yemeksepeti":80.0},"stock":400},{"id":50,"name":"Şalgam 330 ML","cat":"İçecek","icon":"🥤","price":40.0,"prices":{"Telefon":45.0,"Yemeksepeti":45.0},"stock":200},{"id":51,"name":"Şalgam 1 LT","cat":"İçecek","icon":"🥤","price":70.0,"prices":{"Telefon":75.0,"Yemeksepeti":80.0},"stock":200},{"id":52,"name":"Limonata 330 ML","cat":"İçecek","icon":"🥤","price":35.0,"prices":{"Telefon":40.0,"Yemeksepeti":45.0},"stock":200},{"id":53,"name":"Limonata 1 LT","cat":"İçecek","icon":"🥤","price":70.0,"prices":{"Telefon":75.0,"Yemeksepeti":80.0},"stock":200},{"id":54,"name":"Kola 1 LT","cat":"İçecek","icon":"🥤","price":60.0,"prices":{"Telefon":70.0,"Yemeksepeti":80.0},"stock":200},{"id":55,"name":"Kola 2 LT","cat":"İçecek","icon":"🥤","price":80.0,"prices":{"Telefon":90.0,"Yemeksepeti":100.0},"stock":200},{"id":56,"name":"Kola 2.5 LT","cat":"İçecek","icon":"🥤","price":90.0,"prices":{"Telefon":100.0,"Yemeksepeti":115.0},"stock":200},{"id":57,"name":"Doritos 15 GR","cat":"Ek Paketler","icon":"🥔","price":15.0,"prices":{"Telefon":15.0,"Yemeksepeti":15.0},"stock":400},{"id":58,"name":"Doritos 20 GR","cat":"Ek Paketler","icon":"🥔","price":20.0,"prices":{"Telefon":20.0,"Yemeksepeti":20.0},"stock":400},{"id":59,"name":"Küçük Yeşillik","cat":"Ek Paketler","icon":"🥬","price":25.0,"prices":{"Telefon":25.0,"Yemeksepeti":30.0},"stock":400},{"id":60,"name":"Büyük Yeşillik","cat":"Ek Paketler","icon":"🥬","price":35.0,"prices":{"Telefon":35.0,"Yemeksepeti":40.0},"stock":400},{"id":61,"name":"Turşu Paketi","cat":"Ek Paketler","icon":"🥒","price":35.0,"prices":{"Telefon":35.0,"Yemeksepeti":45.0},"stock":400},{"id":62,"name":"2 Lavaş","cat":"Ek Paketler","icon":"🫓","price":8.0,"prices":{"Telefon":8.0,"Yemeksepeti":8.0},"stock":400}]
   
   </script>
 
   <!-- Şube 2: Cihanpol Şubesi Ürünleri -->
   <script type="application/json" id="branchCihanpolProducts">
   
-[
-    {
-        "id": 3,
-        "name": "Tombik 90gr",
-        "cat": "Tombikler",
-        "price": 65,
-        "stock": 50,
-        "icon": "🥙",
-        "description": "Normal boy tombik"
-    },
-    {
-        "id": 4,
-        "name": "Mega Tombik 130gr",
-        "cat": "Tombikler",
-        "price": 90,
-        "stock": 45,
-        "icon": "🥙",
-        "description": "Mega boy tombik"
-    },
-    {
-        "id": 5,
-        "name": "Çiğ Köfte 250gr",
-        "cat": "Çiğ Köfte",
-        "price": 90,
-        "stock": 35,
-        "icon": "🥗",
-        "description": "250gr porsiyon"
-    },
-    {
-        "id": 6,
-        "name": "Çiğ Köfte 500gr",
-        "cat": "Çiğ Köfte",
-        "price": 170,
-        "stock": 25,
-        "icon": "🥗",
-        "description": "500gr porsiyon"
-    },
-    {
-        "id": 7,
-        "name": "Çiğ Köfte 1kg",
-        "cat": "Çiğ Köfte",
-        "price": 320,
-        "stock": 18,
-        "icon": "🥗",
-        "description": "1kg paket"
-    },
-    {
-        "id": 8,
-        "name": "Ayran 200ml",
-        "cat": "İçecek",
-        "price": 15,
-        "stock": 110,
-        "icon": "🥛",
-        "description": "Soğuk ayran"
-    },
-    {
-        "id": 9,
-        "name": "Şalgam 300ml",
-        "cat": "İçecek",
-        "price": 20,
-        "stock": 85,
-        "icon": "🧃",
-        "description": "Acılı/Acısız"
-    },
-    {
-        "id": 10,
-        "name": "Kola 330ml",
-        "cat": "İçecek",
-        "price": 25,
-        "stock": 80,
-        "icon": "🥤",
-        "description": "Kutu kola"
-    },
-    {
-        "id": 11,
-        "name": "Fanta 330ml",
-        "cat": "İçecek",
-        "price": 25,
-        "stock": 70,
-        "icon": "🥤",
-        "description": "Kutu fanta"
-    },
-    {
-        "id": 12,
-        "name": "Su 500ml",
-        "cat": "İçecek",
-        "price": 10,
-        "stock": 180,
-        "icon": "💧",
-        "description": "Su"
-    },
-    {
-        "id": 13,
-        "name": "Soda",
-        "cat": "İçecek",
-        "price": 12,
-        "stock": 90,
-        "icon": "🫧",
-        "description": "Maden suyu"
-    },
-    {
-        "id": 14,
-        "name": "Nar Ekşisi",
-        "cat": "Ekstra",
-        "price": 10,
-        "stock": 55,
-        "icon": "🍯",
-        "description": "Ekstra sos"
-    },
-    {
-        "id": 15,
-        "name": "Acı Sos",
-        "cat": "Ekstra",
-        "price": 10,
-        "stock": 55,
-        "icon": "🌶️",
-        "description": "Ekstra acı"
-    },
-    {
-        "id": 16,
-        "name": "Lavaş",
-        "cat": "Ekstra",
-        "price": 5,
-        "stock": 180,
-        "icon": "🫓",
-        "description": "Tek lavaş"
-    },
-    {
-        "id": 17,
-        "name": "Marul",
-        "cat": "Ekstra",
-        "price": 5,
-        "stock": 140,
-        "icon": "🥬",
-        "description": "Tek marul"
-    },
-    {
-        "id": 18,
-        "name": "Turşu",
-        "cat": "Ekstra",
-        "price": 5,
-        "stock": 140,
-        "icon": "🥒",
-        "description": "Tek turşu"
-    },
-    {
-        "id": 19,
-        "name": "Patates Kızartması",
-        "cat": "Atıştırmalık",
-        "price": 40,
-        "stock": 30,
-        "icon": "🍟",
-        "description": "Porsiyon patates"
-    },
-    {
-        "id": 20,
-        "name": "Soğan Halkası",
-        "cat": "Atıştırmalık",
-        "price": 45,
-        "stock": 26,
-        "icon": "🧅",
-        "description": "Porsiyon soğan halkası"
-    },
-    {
-        "id": 21,
-        "name": "Soslu Patates",
-        "cat": "Atıştırmalık",
-        "price": 50,
-        "stock": 20,
-        "icon": "🍟",
-        "description": "Özel soslu"
-    },
-    {
-        "id": 22,
-        "name": "Tatlı",
-        "cat": "Tatlı",
-        "price": 35,
-        "stock": 16,
-        "icon": "🍰",
-        "description": "Günün tatlısı"
-    },
-    {
-        "id": 23,
-        "name": "Brownie",
-        "cat": "Tatlı",
-        "price": 40,
-        "stock": 12,
-        "icon": "🍫",
-        "description": "Brownie dilim"
-    },
-    {
-        "id": 24,
-        "name": "Künefe",
-        "cat": "Tatlı",
-        "price": 60,
-        "stock": 10,
-        "icon": "🧀",
-        "description": "Sıcak künefe"
-    },
-    {
-        "id": 25,
-        "name": "Çay",
-        "cat": "İçecek",
-        "price": 10,
-        "stock": 180,
-        "icon": "🍵",
-        "description": "Sıcak çay"
-    }
-]
+[{"id":26,"name":"Normal Dürüm","cat":"Dürümler","icon":"🌯","price":50.0,"prices":{"Telefon":60.0,"Yemeksepeti":80.0},"stock":200},{"id":27,"name":"Mega Dürüm","cat":"Dürümler","icon":"🌯","price":90.0,"prices":{"Telefon":100.0,"Yemeksepeti":120.0},"stock":200},{"id":28,"name":"Ultra Mega Dürüm","cat":"Dürümler","icon":"🌯","price":110.0,"prices":{"Telefon":120.0,"Yemeksepeti":125.0},"stock":200},{"id":29,"name":"Duble Dürüm","cat":"Dürümler","icon":"🌯","price":135.0,"prices":{"Telefon":140.0,"Yemeksepeti":140.0},"stock":200},{"id":30,"name":"250 GR Porsiyon","cat":"Çiğ Köfte","icon":"🥗","price":100.0,"prices":{"Telefon":100.0,"Yemeksepeti":110.0},"stock":80},{"id":31,"name":"350 GR Porsiyon","cat":"Çiğ Köfte","icon":"🥗","price":115.0,"prices":{"Telefon":115.0,"Yemeksepeti":150.0},"stock":80},{"id":32,"name":"500 GR Porsiyon","cat":"Çiğ Köfte","icon":"🥗","price":150.0,"prices":{"Telefon":150.0,"Yemeksepeti":190.0},"stock":80},{"id":33,"name":"750 GR Porsiyon","cat":"Çiğ Köfte","icon":"🥗","price":225.0,"prices":{"Telefon":225.0,"Yemeksepeti":280.0},"stock":80},{"id":34,"name":"1 KG Porsiyon","cat":"Çiğ Köfte","icon":"🥗","price":300.0,"prices":{"Telefon":300.0,"Yemeksepeti":370.0},"stock":80},{"id":35,"name":"Su","cat":"İçecek","icon":"💧","price":10.0,"prices":{"Telefon":15.0,"Yemeksepeti":20.0},"stock":200},{"id":36,"name":"Küçük Ayran","cat":"İçecek","icon":"🥛","price":15.0,"prices":{"Telefon":20.0,"Yemeksepeti":20.0},"stock":200},{"id":37,"name":"Büyük Ayran","cat":"İçecek","icon":"🥛","price":20.0,"prices":{"Telefon":25.0,"Yemeksepeti":30.0},"stock":200},{"id":38,"name":"Cam Kola","cat":"İçecek","icon":"🥤","price":35.0,"prices":{"Telefon":40.0,"Yemeksepeti":45.0},"stock":200},{"id":39,"name":"Cam Fanta","cat":"İçecek","icon":"🥤","price":35.0,"prices":{"Telefon":40.0,"Yemeksepeti":45.0},"stock":200},{"id":40,"name":"Kutu Kola","cat":"İçecek","icon":"🥤","price":50.0,"prices":{"Telefon":60.0,"Yemeksepeti":65.0},"stock":200},{"id":41,"name":"Kutu Fanta","cat":"İçecek","icon":"🥤","price":50.0,"prices":{"Telefon":60.0,"Yemeksepeti":65.0},"stock":200},{"id":42,"name":"İcetea Mango","cat":"Ek Paketler","icon":"📦","price":50.0,"prices":{"Telefon":60.0,"Yemeksepeti":65.0},"stock":400},{"id":43,"name":"İcetea Şeftali","cat":"Ek Paketler","icon":"📦","price":50.0,"prices":{"Telefon":60.0,"Yemeksepeti":65.0},"stock":400},{"id":44,"name":"İcetea Limon","cat":"Ek Paketler","icon":"📦","price":50.0,"prices":{"Telefon":60.0,"Yemeksepeti":65.0},"stock":400},{"id":45,"name":"İcetea Karpuz","cat":"Ek Paketler","icon":"📦","price":50.0,"prices":{"Telefon":60.0,"Yemeksepeti":65.0},"stock":400},{"id":46,"name":"İcetea Mango 1 LT","cat":"Ek Paketler","icon":"📦","price":60.0,"prices":{"Telefon":70.0,"Yemeksepeti":80.0},"stock":400},{"id":47,"name":"İcetea Şeftali 1 LT","cat":"Ek Paketler","icon":"📦","price":60.0,"prices":{"Telefon":70.0,"Yemeksepeti":80.0},"stock":400},{"id":48,"name":"İcetea Limon 1 LT","cat":"Ek Paketler","icon":"📦","price":60.0,"prices":{"Telefon":70.0,"Yemeksepeti":80.0},"stock":400},{"id":49,"name":"İcetea Karpuz 1 LT","cat":"Ek Paketler","icon":"📦","price":60.0,"prices":{"Telefon":70.0,"Yemeksepeti":80.0},"stock":400},{"id":50,"name":"Şalgam 330 ML","cat":"İçecek","icon":"🥤","price":40.0,"prices":{"Telefon":45.0,"Yemeksepeti":45.0},"stock":200},{"id":51,"name":"Şalgam 1 LT","cat":"İçecek","icon":"🥤","price":70.0,"prices":{"Telefon":75.0,"Yemeksepeti":80.0},"stock":200},{"id":52,"name":"Limonata 330 ML","cat":"İçecek","icon":"🥤","price":35.0,"prices":{"Telefon":40.0,"Yemeksepeti":45.0},"stock":200},{"id":53,"name":"Limonata 1 LT","cat":"İçecek","icon":"🥤","price":70.0,"prices":{"Telefon":75.0,"Yemeksepeti":80.0},"stock":200},{"id":54,"name":"Kola 1 LT","cat":"İçecek","icon":"🥤","price":60.0,"prices":{"Telefon":70.0,"Yemeksepeti":80.0},"stock":200},{"id":55,"name":"Kola 2 LT","cat":"İçecek","icon":"🥤","price":80.0,"prices":{"Telefon":90.0,"Yemeksepeti":100.0},"stock":200},{"id":56,"name":"Kola 2.5 LT","cat":"İçecek","icon":"🥤","price":90.0,"prices":{"Telefon":100.0,"Yemeksepeti":115.0},"stock":200},{"id":57,"name":"Doritos 15 GR","cat":"Ek Paketler","icon":"🥔","price":15.0,"prices":{"Telefon":15.0,"Yemeksepeti":15.0},"stock":400},{"id":58,"name":"Doritos 20 GR","cat":"Ek Paketler","icon":"🥔","price":20.0,"prices":{"Telefon":20.0,"Yemeksepeti":20.0},"stock":400},{"id":59,"name":"Küçük Yeşillik","cat":"Ek Paketler","icon":"🥬","price":25.0,"prices":{"Telefon":25.0,"Yemeksepeti":30.0},"stock":400},{"id":60,"name":"Büyük Yeşillik","cat":"Ek Paketler","icon":"🥬","price":35.0,"prices":{"Telefon":35.0,"Yemeksepeti":40.0},"stock":400},{"id":61,"name":"Turşu Paketi","cat":"Ek Paketler","icon":"🥒","price":35.0,"prices":{"Telefon":35.0,"Yemeksepeti":45.0},"stock":400},{"id":62,"name":"2 Lavaş","cat":"Ek Paketler","icon":"🫓","price":8.0,"prices":{"Telefon":8.0,"Yemeksepeti":8.0},"stock":400}]
   
   </script>
 
@@ -1460,9 +1032,9 @@ var SHEETS_SYNC = {
 
     // Varsayılanlar
     var DEFAULTS = {
-      categories: ['Çiğ Köfte','Dürümler','Tombikler','İçecek','Tatlı','Atıştırmalık','Ekstra'],
+      categories: ["Çiğ Köfte", "Dürümler", "İçecek", "Ek Paketler"],
       expenseTypes: ['Kira','Elektrik','Su','Doğalgaz','Personel','Malzeme','Diğer'],
-      salesChannels: ['Dükkan İçi','Yemeksepeti','Getir','Telefon','Trendyol Yemek'],
+      salesChannels: ["Dükkan İçi", "Telefon", "Yemeksepeti", "Getir", "Trendyol Yemek"],
       branches: {
         hastane: { name:'Hastane Şubesi', products:[], sales:[], expenses:[] },
         cihanpol:{ name:'Cihanpol Şubesi', products:[], sales:[], expenses:[] }
@@ -1757,6 +1329,7 @@ var SHEETS_SYNC = {
     }
     function refreshBranchLabel(){
       var b = getBranch();
+    var p = null;
       var el = document.getElementById('activeBranchLabel');
       if(el && b) el.textContent = '— ' + b.name;
     }
@@ -1875,7 +1448,7 @@ var SHEETS_SYNC = {
 
     // ====== POS ======
     // Satış kanalları (şimdilik Trendyol Yemek pasif)
-    var INACTIVE_SALES_CHANNELS = ['Trendyol Yemek'];
+    var INACTIVE_SALES_CHANNELS = ['Getir','Trendyol Yemek'];
     function getActiveSalesChannels(){
       var arr = (state && Array.isArray(state.salesChannels)) ? state.salesChannels : [];
       var out = [];
@@ -1968,10 +1541,7 @@ var SHEETS_SYNC = {
     function isPhoneChannel(ch){
       return String(ch||'').trim().toLowerCase() === 'telefon';
     }
-    function getDeliveryFee(){
-      if(!isPhoneChannel(activeChannel)) return 0;
-      return Number(getVal('deliveryFee')||0) || 0;
-    }
+    function getDeliveryFee(){ return 0; }
 
     function renderPayButtons(){
       var el = document.getElementById('payButtons');
@@ -2016,15 +1586,23 @@ var SHEETS_SYNC = {
 
       // Kanallar
       html = '';
-      var chans = getActiveSalesChannels();
-      if(chans.indexOf(activeChannel)===-1) activeChannel = chans[0] || 'Dükkan İçi';
-      for(i=0;i<chans.length;i++){
-        c = chans[i];
-        html += '<div class="chip '+(activeChannel===c?'active':'')+'" data-channel="'+esc(c)+'">📍 '+esc(c)+'</div>';
+      var allChans = (state.salesChannels && state.salesChannels.length) ? state.salesChannels : DEFAULTS.salesChannels;
+      var activeChans = getActiveSalesChannels();
+      if(activeChans.indexOf(activeChannel)===-1) activeChannel = activeChans[0] || allChans[0] || 'Dükkan İçi';
+      for(i=0;i<allChans.length;i++){
+        c = allChans[i];
+        var inactive = isInactiveChannel(c);
+        var cls = 'chip ' + (activeChannel===c?'active ':'') + (inactive?'disabled':'');
+        if(inactive){
+          html += '<div class="'+cls+'" data-channel-disabled="1">🔒 '+esc(c)+'</div>';
+        }else{
+          html += '<div class="'+cls+'" data-channel="'+esc(c)+'">📍 '+esc(c)+'</div>';
+        }
       }
       channelButtons.innerHTML = html;
 
-      // Ürünler
+// Ürünler
+
       var prods = branch.products || [];
       html = '';
       for(i=0;i<prods.length;i++){
@@ -2068,16 +1646,21 @@ var SHEETS_SYNC = {
       // kanal tıklama
       channelButtons.onclick = function(ev){
         var el = ev.target;
-        while(el && el!==channelButtons && !el.getAttribute('data-channel')) el = el.parentElement;
-        if(el && el.getAttribute('data-channel')){
-          activeChannel = el.getAttribute('data-channel');
+        while(el && el!==channelButtons && !el.getAttribute('data-channel') && !el.getAttribute('data-channel-disabled')) el = el.parentElement;
+        if(!el || el===channelButtons) return;
+        if(el.getAttribute('data-channel-disabled')){
+          alert('Bu satış kanalı şu an pasif. Hesap açılınca aktif edilebilir.');
+          return;
+        }
+        var ch = el.getAttribute('data-channel');
+        if(ch){
+          activeChannel = ch;
           // Kanal değiştiyse sepetteki fiyatları güncelle
           syncCartPricesToChannel();
-          // Telefon dışına çıkınca kurye ücretini sıfırla
-          if(!isPhoneChannel(activeChannel)) setVal('deliveryFee','');
           renderPOS();
         }
       };
+
 
       renderCart();
       renderPayButtons();
@@ -2091,10 +1674,7 @@ var SHEETS_SYNC = {
       return t;
     }
 
-    function calcCartTotal(){
-      var sub = calcCartSubtotal();
-      return sub + getDeliveryFee();
-    }
+    function calcCartTotal(){ return calcCartSubtotal(); }
 
     function renderCart(){
       var el = document.getElementById('cartList');
@@ -2220,8 +1800,8 @@ var SHEETS_SYNC = {
       }
 
       var subtotal = calcCartSubtotal();
-      var deliveryFee = getDeliveryFee();
-      var total = subtotal + deliveryFee;
+      var deliveryFee = 0;
+      var total = subtotal;
 
       var now = new Date();
       var sale = {
@@ -2340,7 +1920,7 @@ var SHEETS_SYNC = {
     }
 
     function renderSalesChannelFilter(extraChannel){
-      var channels = getActiveSalesChannels();
+      var channels = (state.salesChannels && state.salesChannels.length) ? state.salesChannels.slice() : DEFAULTS.salesChannels.slice();
       if(extraChannel){
         var ex = String(extraChannel||'').trim();
         if(ex && channels.indexOf(ex)===-1) channels = channels.concat([ex]);
@@ -2666,8 +2246,41 @@ var SHEETS_SYNC = {
       renderChannelPriceFields(null);
     }
 
-    function saveProduct(){
+    
+function cloneObj(o){ try{ return JSON.parse(JSON.stringify(o||{})); }catch(e){ return {}; } }
+function normNameForMatch(s){ return (s||'').toString().toLowerCase().replace(/\s+/g,' ').trim(); }
+
+// Hastane & Cihanpol fiyatları aynı kalacak: ürün güncellemesi (isim/kategori/ikon/fiyatlar) tüm şubelere uygulanır.
+// Stoklar şube bazında ayrı tutulur.
+function syncProductAcrossBranches(srcBranchKey, prod){
+  var branches = state.branches || {};
+  var keys = Object.keys(branches);
+  for(var i=0;i<keys.length;i++){
+    var bk = keys[i];
+    if(bk===srcBranchKey) continue;
+    var arr = (branches[bk] && branches[bk].products) ? branches[bk].products : [];
+    var target = null;
+    for(var j=0;j<arr.length;j++){ if(String(arr[j].id)===String(prod.id)) { target = arr[j]; break; } }
+    if(!target){
+      var n = normNameForMatch(prod.name);
+      for(var k=0;k<arr.length;k++){ if(normNameForMatch(arr[k].name)===n){ target = arr[k]; break; } }
+    }
+    if(target){
+      target.name = prod.name;
+      target.cat = prod.cat;
+      target.icon = prod.icon;
+      target.price = prod.price;
+      target.prices = cloneObj(prod.prices);
+    }else{
+      arr.push({id:prod.id,name:prod.name,cat:prod.cat,icon:prod.icon,price:prod.price,prices:cloneObj(prod.prices),stock:prod.stock||0});
+      branches[bk].products = arr;
+    }
+  }
+}
+
+function saveProduct(){
       var b = getBranch();
+      var p = null;
       var idRaw = getVal('pId');
       var name = getVal('pName').trim();
       var cat = getVal('pCat');
@@ -2715,9 +2328,11 @@ var SHEETS_SYNC = {
           icon:icon,
           prices: prices
         });
+    p = b.products[b.products.length-1];
       }
-
+      if(p){ syncProductAcrossBranches(getBranchKey(), p); }
       save();
+      if(p && SheetsSync && SheetsSync.logProduct){ SheetsSync.logProduct(getBranchKey(), p); }
       resetProductForm();
       renderAll();
       alert('Ürün kaydedildi!');
@@ -2779,7 +2394,7 @@ var SHEETS_SYNC = {
       var sel3 = document.getElementById('invPriceChannel');
       if(sel3){
         var html3 = '';
-        var chans = getActiveSalesChannels();
+        var chans = (state.salesChannels && state.salesChannels.length) ? state.salesChannels : DEFAULTS.salesChannels;
         for(i=0;i<chans.length;i++){
           html3 += '<option value="'+esc(chans[i])+'">'+esc(chans[i])+'</option>';
         }
@@ -3476,6 +3091,15 @@ alert('Gider eklendi!');
         }, 10000);
       }
 
+
+  function logProduct(branchKey, product){
+    // Ops! A:H => ts, branch, type, id, basePrice, name, category, pricesJson
+    var row = [nowIso(), String(branchKey||''), 'product', String((product&&product.id)||''), String(Number((product&&product.price)||0).toFixed(2)), String((product&&product.name)||''), String((product&&product.cat)||''), JSON.stringify((product&&product.prices)||{})];
+    // Token yoksa kuyruğa al (state push ile birlikte tekrar denensin)
+    if(!accessToken){ opsQueue.push(row); saveQueue(); return; }
+    appendOpsRows([row], function(ok){ if(!ok){ opsQueue.push(row); saveQueue(); } });
+  }
+
 return {
   init: init,
   isReady: function(){ return !!tokenClient; },
@@ -3488,7 +3112,8 @@ return {
   push: push,
   pushDebounced: pushDebounced,
   logSale: logSale,
-  logExpense: logExpense
+  logExpense: logExpense,
+    logProduct: logProduct
 };
 
     })();
