@@ -3031,9 +3031,18 @@ alert('Gider eklendi!');
       var deviceId = null;
       var isApplyingRemote = false;
       var lastPullRev = Number(localStorage.getItem('SHEETS_LAST_PULL_REV') || 0);
+      var lastPullHash = String(localStorage.getItem('SHEETS_LAST_PULL_HASH') || '');
       var pushTimer = null;
       var pullTimer = null;
       var pullInFlight = false;
+      var pushInFlight = false;
+
+      function hashStr(str){
+        // Fast deterministic hash (djb2). Good enough for change detection.
+        var h = 5381;
+        for (var i = 0; i < str.length; i++) h = ((h << 5) + h) ^ str.charCodeAt(i);
+        return String(h >>> 0);
+      }
 
       function nowIso(){ return new Date().toISOString(); }
       // --- TOKEN PERSIST / AUTO-RECONNECT (sessionStorage + silent refresh) ---
@@ -3386,8 +3395,9 @@ alert('Gider eklendi!');
           return;
         }
 
-        if(pullInFlight) return;
-        pullInFlight = true;
+        // avoid push/pull racing each other
+        if(pullInFlight || pushInFlight) return;
+        pushInFlight = true;
 
         var rev = Date.now(); // basit rev
         var values = [[ String(rev), nowIso(), deviceId, JSON.stringify(state) ]];
@@ -3402,11 +3412,18 @@ alert('Gider eklendi!');
           headers:{'Content-Type':'application/json'},
           body: JSON.stringify({ range: SHEETS_SYNC.range, majorDimension:'ROWS', values: values })
         }).then(function(){
+          // Treat a successful push as the latest known remote snapshot.
+          lastPullRev = rev;
+          localStorage.setItem('SHEETS_LAST_PULL_REV', String(lastPullRev));
+          lastPullHash = hashStr(values[0][3]);
+          localStorage.setItem('SHEETS_LAST_PULL_HASH', lastPullHash);
           pill('sync-ok','✅ Senkron');
           setLast(nowIso());
         }).catch(function(err){
           console.warn(err);
           pill('sync-bad','❌ Gönderme hata');
+        }).then(function(){
+          pushInFlight = false;
         });
       }
 
@@ -3417,7 +3434,8 @@ alert('Gider eklendi!');
           return;
         }
 
-        if(pullInFlight) return;
+        // avoid push/pull racing each other
+        if(pullInFlight || pushInFlight) return;
         pullInFlight = true;
 
         var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + encodeURIComponent(SHEETS_SYNC.spreadsheetId)
@@ -3435,7 +3453,11 @@ alert('Gider eklendi!');
           var updatedAt = row[1] || '';
           var remoteJson = row[3] || '';
 
-          if(!force && rev <= lastPullRev){
+          // Manual edits in Google Sheets / Excel imports may not bump REV.
+          // Therefore we also track a hash of the JSON payload.
+          var remoteHash = hashStr(remoteJson || '');
+
+          if(!force && rev && rev <= lastPullRev && remoteHash && remoteHash === lastPullHash){
             pill('sync-ok','✅ Güncel');
             setLast(updatedAt || nowIso());
             return;
@@ -3454,8 +3476,12 @@ alert('Gider eklendi!');
           renderAll();
           isApplyingRemote = false;
 
-          lastPullRev = rev;
-          localStorage.setItem('SHEETS_LAST_PULL_REV', String(lastPullRev));
+          if(rev && rev > lastPullRev){
+            lastPullRev = rev;
+            localStorage.setItem('SHEETS_LAST_PULL_REV', String(lastPullRev));
+          }
+          lastPullHash = remoteHash;
+          localStorage.setItem('SHEETS_LAST_PULL_HASH', String(lastPullHash));
 
           pill('sync-ok','✅ Güncellendi');
           setLast(updatedAt || nowIso());
@@ -3504,6 +3530,7 @@ return {
       var btnPush = document.getElementById('btnSyncPush');
 
       if(btnC) btnC.onclick = function(){ SheetsSync.connect(); };
+      // Manual pull should always override local cache & REV checks
       if(btnPull) btnPull.onclick = function(){ SheetsSync.pull(true); };
       if(btnPush) btnPush.onclick = function(){ SheetsSync.push(); };
     }
