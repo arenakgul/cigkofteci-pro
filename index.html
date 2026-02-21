@@ -3719,24 +3719,31 @@ return {
       var pPriceEl = document.getElementById('pPrice');
       if(pPriceEl){
         pPriceEl.oninput = function(){
-          try{
-            var cur = {};
-            var nodes = document.querySelectorAll('#channelPriceFields .pChPrice');
-            for(var i=0;i<nodes.length;i++){
-              var ch = nodes[i].getAttribute('data-channel') || '';
-              ch = String(ch).trim();
-              if(!ch) continue;
-              var vv = (nodes[i].value||'').trim();
-              if(vv!=='') cur[ch] = Number(vv)||0;
-            }
-            renderChannelPriceFields(cur, pPriceEl.value);
-            var nodes2 = document.querySelectorAll('#channelPriceFields .pChPrice');
-            for(var j=0;j<nodes2.length;j++){
-              var ch2 = nodes2[j].getAttribute('data-channel') || '';
-              ch2 = String(ch2).trim();
-              if(cur[ch2]!==undefined) nodes2[j].value = String(cur[ch2]);
-            }
-          }catch(e){}
+          try {
+    var nodes = document.querySelectorAll('#channelPriceFields .pChPrice');
+    // Döngü başlangıcı
+    for (var i = 0; i < nodes.length; i++) {
+        var ch = nodes[i].getAttribute('data-channel') || '';
+        ch = String(ch).trim();
+        
+        // continue kullanımı artık güvenli çünkü for döngüsü içindeyiz
+        if (!ch) continue; 
+        
+        var vv = (nodes[i].value || '').trim();
+        if (vv !== '') cur[ch] = Number(vv) || 0;
+    } // Döngü bitişi
+    
+    renderChannelPriceFields(cur, pPriceEl.value);
+    
+    var nodes2 = document.querySelectorAll('#channelPriceFields .pChPrice');
+    for (var j = 0; j < nodes2.length; j++) {
+        var ch2 = nodes2[j].getAttribute('data-channel') || '';
+        ch2 = String(ch2).trim();
+        if (cur[ch2] !== undefined) nodes2[j].value = String(cur[ch2]);
+    }
+} catch (e) {
+    console.error("Hata:", e);
+}
         };
       }
 // filtre dropdown'ları ilk kez doldur
