@@ -2374,67 +2374,49 @@ var SHEETS_SYNC = {
       tb.innerHTML = html || '<tr><td colspan="6" class="muted">Satış yok</td></tr>';
     }
 
-    function filterSales(){
-      var b = getBranch();
-      if(!b) return;
+function filterSales(){
+  var b = getBranch();
+  if(!b) return;
 
-      var from = getVal('salesDateFrom');
-      var to = getVal('salesDateTo');
-      var chFilter = getVal('salesChannelFilter');
-      var mFilter = getVal('salesMethodFilter');
-      var q = (getVal('salesSearch')||'').toLowerCase().trim();
+  var from = getVal('salesDateFrom');
+  var to = getVal('salesDateTo');
+  var chFilter = getVal('salesChannelFilter');
+  var mFilter = getVal('salesMethodFilter');
+  var q = (getVal('salesSearch')||'').toLowerCase().trim();
 
-      var out = [];
-      for(var i=0;i<b.sales.length;i++){
-        var s = b.sales[i];
+  var out = [];
+  for(var i=0; i<b.sales.length; i++){
+    var s = b.sales[i];
 
-        // Tarih aralığı (İstanbul dateKey)
-        var sKey = s.dateKey || istanbulDateKeyFromIso(s.date);
-        if(from && sKey < from) continue;
-        if(to && sKey > to) continue;
+    // Tarih aralığı (İstanbul dateKey)
+    var sKey = s.dateKey || istanbulDateKeyFromIso(s.date);
+    if(from && sKey < from) continue;
+    if(to && sKey > to) continue;
 
-        // Kanal
-        if(chFilter && chFilter!=='Hepsi'){
-          if((s.channel||'') !== chFilter) continue;
-        }
-
-        // Ödeme yöntemi
-        if(mFilter && mFilter!=='Hepsi'){
-          if((s.method||'') !== mFilter) continue;
-        }
-
-        // Arama
-        if(q){
-          var hay = (String(s.id)+' '+(s.channel||'')+' '+(s.method||'')+' ');
-          for(var j=0;j<(s.items||[]).length;j++){
-            hay += (s.items[j].name||'')+' ';
-          }
-          if(hay.toLowerCase().indexOf(q)===-1) continue;
-        }
-
-        out.push(s);
-      }
-
-      renderSalesTable(out);
+    // Kanal
+    if(chFilter && chFilter!=='Hepsi'){
+      if((s.channel||'') !== chFilter) continue;
     }
 
-        if(chFilter && chFilter!=='Hepsi'){
-          if((s.channel||'') !== chFilter) continue;
-        }
-
-        if(q){
-          var hay = (String(s.id)+' '+(s.channel||'')+' '+(s.method||'')+' ');
-          for(var j=0;j<s.items.length;j++){
-            hay += (s.items[j].name||'')+' ';
-          }
-          if(hay.toLowerCase().indexOf(q)===-1) continue;
-        }
-
-        out.push(s);
-      }
-
-      renderSalesTable(out);
+    // Ödeme yöntemi
+    if(mFilter && mFilter!=='Hepsi'){
+      if((s.method||'') !== mFilter) continue;
     }
+
+    // Arama
+    if(q){
+      var hay = (String(s.id)+' '+(s.channel||'')+' '+(s.method||'')+' ');
+      for(var j=0; j<(s.items||[]).length; j++){
+        hay += (s.items[j].name||'')+' ';
+      }
+      if(hay.toLowerCase().indexOf(q)===-1) continue;
+    }
+
+    out.push(s);
+  }
+
+  renderSalesTable(out);
+}
 
     function renderSalesChannelFilter(extraChannel){
       var channels = (state && Array.isArray(state.salesChannels) && state.salesChannels.length) ? state.salesChannels.slice() : ['Dükkan İçi'];
