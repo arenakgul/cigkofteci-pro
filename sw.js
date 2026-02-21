@@ -1,6 +1,6 @@
 // Simple offline cache for Çiğ Köfteci Mahsum Usta (GitHub Pages friendly)
 // bump cache version to ensure clients receive the latest index.html sync fixes
-const CACHE = "mahsum-usta-v8";
+const CACHE = "mahsum-usta-v9";
 const ASSETS = ["./", "./index.html", "./sw.js"];
 
 self.addEventListener("install", (e) => {
