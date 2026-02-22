@@ -90,11 +90,11 @@
     /* Layout */
     .app{display:flex; min-height:100vh;
       height:100dvh;}
-    .main{flex:1; padding:14px; min-width:0;}
+    .main{flex:1; padding:16px; min-width:0;}
 
     /* Sidebar */
     .sidebar{
-      width:260px;
+      width:285px;
       padding:18px;
       border-right:1px solid var(--border);
       background:var(--panel);
@@ -240,7 +240,7 @@
       gap:10px;
       flex-wrap:wrap;
       box-shadow:var(--shadow2);
-      margin-bottom:12px;
+      margin-bottom:14px;
     }
     .topbar h1{
       font-size:16px;
@@ -314,7 +314,6 @@
       vertical-align:middle;
     }
     .chip:hover,.channel-btn:hover{transform:translateY(-1px); background:rgba(255,255,255,.05);}
-    .chip.disabled{opacity:.55; cursor:not-allowed; transform:none;}
     .chip.active,.channel-btn.active{
       background:rgba(135,25,24,.12);
       border-color:rgba(135,25,24,.35);
@@ -324,38 +323,35 @@
     /* POS layout */
     .content-grid{
       display:grid;
-      grid-template-columns:minmax(0, 1fr) 380px;
-      gap: 12px;
+      grid-template-columns:1.7fr 1fr;
+      gap:14px;
       align-items:start;
     }
     .pos-tools{
-      display:grid;
-      grid-template-columns:1fr 1fr;
+      display:flex;
       gap:12px;
-      align-items:start;
-    }
-    @media (max-width: 980px){
-      .pos-tools{grid-template-columns:1fr;}
+      flex-wrap:wrap;
+      align-items:flex-start;
     }
 
     /* POS grid: auto-fit */
     .product-grid{
       display:grid;
-      grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));
-      gap:10px;
+      grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));
+      gap:12px;
       margin-top:10px;
     }
     .product{
       border:1px solid var(--border);
       background:var(--panel2);
       border-radius:var(--r);
-      padding:10px;
+      padding:14px;
       cursor:pointer;
       transition:var(--t);
       display:flex;
-      gap:8px;
+      gap:10px;
       align-items:center;
-      min-height:58px;
+      min-height:66px;
     }
     .product:hover{
       transform:translateY(-2px);
@@ -363,12 +359,12 @@
       box-shadow:var(--shadow2);
     }
     .pico{
-      width:34px; height:34px;
-      border-radius:12px;
+      width:40px; height:40px;
+      border-radius:14px;
       display:grid; place-items:center;
       background:rgba(135,25,24,.12);
       border:1px solid rgba(135,25,24,.20);
-      font-size:18px;
+      font-size:20px;
       flex:0 0 auto;
     }
     .pname{
@@ -419,7 +415,7 @@
     .pay-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;}
 
     /* Cards */
-    .cards{display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px;}
+    .cards{display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:12px;}
     .card{
       background:var(--panel);
       border:1px solid var(--border);
@@ -506,8 +502,24 @@
     }
 
     /* Responsive */
+
+/* 1360x768 ekranlar için sıkıştırılmış POS görünümü */
+    @media (min-width: 1200px) and (max-height: 820px){
+      .sidebar{ width:250px; padding:14px; }
+      .main{ padding:12px; }
+      .topbar{ padding:12px; margin-bottom:10px; }
+      .panel{ padding:12px; }
+      .content-grid{ grid-template-columns:1.55fr 1fr; gap:12px; }
+      .product-grid{ grid-template-columns:repeat(auto-fit, minmax(145px, 1fr)); gap:10px; }
+      .product{ padding:10px; min-height:58px; }
+      .pico{ width:34px; height:34px; border-radius:12px; font-size:18px; }
+      .chip, .channel-btn{ height:36px; padding:0 12px; }
+      .category-scroll{ padding:2px 2px 6px 2px; }
+      .cart-item{ padding:10px 0; }
+    }
+
     @media (max-width: 1180px){
-      .product-grid{grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));}
+      .product-grid{grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));}
       .content-grid{grid-template-columns:1.4fr 1fr;}
     }
     @media (max-width: 980px){
@@ -737,7 +749,7 @@
 
       <!-- DASHBOARD -->
       <section class="page-view" id="view-dashboard">
-        <div class="panel" style="margin-bottom:12px;">
+        <div class="panel" style="margin-bottom:14px;">
           <h2>
             <span>Özet</span>
             <span class="muted" style="font-size:12px;">Ciro / Gider / Net</span>
@@ -770,19 +782,20 @@
           </h2>
 
           <div class="row" style="flex-wrap:wrap; gap:12px; margin-bottom:12px;">
+            
             <div style="flex:1; min-width:180px;">
               <div class="muted" style="font-size:12px; margin-bottom:6px;">Başlangıç</div>
-              <input type="date" id="salesDateFrom" onchange="filterSales()">
+              <input type="date" id="salesStartFilter" onchange="filterSales()">
             </div>
             <div style="flex:1; min-width:180px;">
               <div class="muted" style="font-size:12px; margin-bottom:6px;">Bitiş</div>
-              <input type="date" id="salesDateTo" onchange="filterSales()">
+              <input type="date" id="salesEndFilter" onchange="filterSales()">
             </div>
-            <div style="flex:1; min-width:200px;">
+            <div style="flex:1; min-width:220px;">
               <div class="muted" style="font-size:12px; margin-bottom:6px;">Kanal</div>
               <select id="salesChannelFilter" onchange="filterSales()"></select>
             </div>
-            <div style="flex:1; min-width:200px;">
+            <div style="flex:1; min-width:220px;">
               <div class="muted" style="font-size:12px; margin-bottom:6px;">Ödeme</div>
               <select id="salesMethodFilter" onchange="filterSales()"></select>
             </div>
@@ -790,7 +803,7 @@
               <div class="muted" style="font-size:12px; margin-bottom:6px;">Ara</div>
               <input id="salesSearch" placeholder="Ürün/kanal/ID ara..." oninput="filterSales()">
             </div>
-          </div></div>
+          </div>
 
           <div style="overflow:auto;">
             <table>
@@ -1028,7 +1041,6 @@
 
   <!-- Şube 1: Hastane Şubesi Ürünleri -->
   <script type="application/json" id="branchHastaneProducts">
-  
 [
     {
         "id": 3,
@@ -1244,15 +1256,13 @@
         "price": 200,
         "stock": 25,
         "icon": "🥗",
-        "description": "750gr porsiyon"
+        "description": "750gr porsiyon (200₺)"
     }
 ]
-  
   </script>
 
   <!-- Şube 2: Cihanpol Şubesi Ürünleri -->
   <script type="application/json" id="branchCihanpolProducts">
-  
 [
     {
         "id": 3,
@@ -1468,10 +1478,9 @@
         "price": 200,
         "stock": 25,
         "icon": "🥗",
-        "description": "750gr porsiyon"
+        "description": "750gr porsiyon (200₺)"
     }
 ]
-  
   </script>
 
       <script>
@@ -1573,7 +1582,9 @@ var SHEETS_SYNC = {
       // temel alanlar yoksa ekle
       if(!st.categories || !Array.isArray(st.categories) || st.categories.length===0) st.categories = deepClone(DEFAULTS.categories);
       if(!st.expenseTypes || !Array.isArray(st.expenseTypes) || st.expenseTypes.length===0) st.expenseTypes = deepClone(DEFAULTS.expenseTypes);
+      if(!st.salesChannels || !Array.isArray(st.salesChannels) || st.salesChannels.length===0) st.salesChannels = deepClone(DEFAULTS.salesChannels);
 
+      
       // gider tiplerini (DEFAULTS + mevcut) birleştir (tekrarları at)
       try{
         var mergedExp = [];
@@ -1587,9 +1598,8 @@ var SHEETS_SYNC = {
         for(ei=0; ei<(st.expenseTypes||[]).length; ei++) addExp(st.expenseTypes[ei]);
         st.expenseTypes = mergedExp;
       }catch(e){}
-      if(!st.salesChannels || !Array.isArray(st.salesChannels) || st.salesChannels.length===0) st.salesChannels = deepClone(DEFAULTS.salesChannels);
 
-      // satış kanallarını (DEFAULTS + mevcut) birleştir (tekrarları at)
+// satış kanallarını (DEFAULTS + mevcut) birleştir (tekrarları at)
       try{
         var mergedCh = [];
         function addCh(x){
@@ -1665,14 +1675,18 @@ var SHEETS_SYNC = {
           var salesArr = st.branches[k].sales || [];
           for(var si=0; si<salesArr.length; si++){
             var s = salesArr[si] || {};
-            // ödeme yöntemi eski değerleri eşle
-            if(s.method==='online') s.method = 'iban';
             if(!s.dateKey){
               try{
                 var dd = new Date(s.date);
                 if(!isNaN(dd.getTime())) s.dateKey = fmt.format(dd);
               }catch(e){}
             }
+
+            // ödeme yöntemi geriye uyumluluk (online -> iban)
+            try{
+              var mm = String(s.method||'').trim().toLowerCase();
+              if(mm==='online') s.method = 'iban';
+            }catch(e){}
             if(s.deliveryFee===undefined || s.deliveryFee===null || s.deliveryFee==='') s.deliveryFee = 0;
             if(s.subtotal===undefined || s.subtotal===null || s.subtotal===''){
               var sub = 0;
@@ -1860,19 +1874,6 @@ var SHEETS_SYNC = {
       return map[cat] || '📦';
     }
 
-    function paymentLabel(k){
-      k = (k===null || k===undefined) ? '' : String(k);
-      var map = {
-        'nakit':'NAKİT',
-        'kart':'KART',
-        'iban':'IBAN',
-        'yemeksepeti':'YEMEKSEPETİ',
-        'online':'IBAN'
-      };
-      return map[k] || k.toUpperCase();
-    }
-
-
     // ====== SIDEBAR & VIEW ======
     function bindNav(){
       var items = document.querySelectorAll('.nav-item');
@@ -1936,9 +1937,6 @@ var SHEETS_SYNC = {
     // ====== POS ======
     // Satış kanalları (şimdilik Trendyol Yemek pasif)
     var INACTIVE_SALES_CHANNELS = ['Trendyol Yemek'];
-    function isInactiveChannel(ch){
-      return INACTIVE_SALES_CHANNELS.indexOf(String(ch||'').trim())!==-1;
-    }
     function getActiveSalesChannels(){
       var arr = (state && Array.isArray(state.salesChannels)) ? state.salesChannels : [];
       var out = [];
@@ -2031,7 +2029,10 @@ var SHEETS_SYNC = {
     function isPhoneChannel(ch){
       return String(ch||'').trim().toLowerCase() === 'telefon';
     }
-    function getDeliveryFee(){ return 0; }
+    function getDeliveryFee(){
+      if(!isPhoneChannel(activeChannel)) return 0;
+      return Number(getVal('deliveryFee')||0) || 0;
+    }
 
     function renderPayButtons(){
       var el = document.getElementById('payButtons');
@@ -2039,7 +2040,8 @@ var SHEETS_SYNC = {
       var methods = [
         {k:'nakit', t:'💵 Nakit'},
         {k:'kart', t:'💳 Kart'},
-        {k:'iban', t:'🏦 IBAN'},{k:'yemeksepeti', t:'🍽️ Yemeksepeti'}
+        {k:'iban', t:'🏦 IBAN'},
+        {k:'yemeksepeti', t:'🛵 Yemeksepeti'}
       ];
       var html = '';
       for(var i=0;i<methods.length;i++){
@@ -2076,17 +2078,11 @@ var SHEETS_SYNC = {
 
       // Kanallar
       html = '';
-      var allChans = (state && Array.isArray(state.salesChannels) && state.salesChannels.length) ? state.salesChannels : ['Dükkan İçi'];
-      if(allChans.indexOf(activeChannel)===-1) activeChannel = allChans[0] || 'Dükkan İçi';
-      for(i=0;i<allChans.length;i++){
-        c = allChans[i];
-        var inactive = isInactiveChannel(c);
-        var cls = 'chip ' + (activeChannel===c?'active ':'') + (inactive?'disabled':'');
-        if(inactive){
-          html += '<div class="'+cls+'" data-channel-disabled="1">🔒 '+esc(c)+'</div>';
-        }else{
-          html += '<div class="'+cls+'" data-channel="'+esc(c)+'">📍 '+esc(c)+'</div>';
-        }
+      var chans = getActiveSalesChannels();
+      if(chans.indexOf(activeChannel)===-1) activeChannel = chans[0] || 'Dükkan İçi';
+      for(i=0;i<chans.length;i++){
+        c = chans[i];
+        html += '<div class="chip '+(activeChannel===c?'active':'')+'" data-channel="'+esc(c)+'">📍 '+esc(c)+'</div>';
       }
       channelButtons.innerHTML = html;
 
@@ -2134,17 +2130,13 @@ var SHEETS_SYNC = {
       // kanal tıklama
       channelButtons.onclick = function(ev){
         var el = ev.target;
-        while(el && el!==channelButtons && !el.getAttribute('data-channel') && !el.getAttribute('data-channel-disabled')) el = el.parentElement;
-        if(!el || el===channelButtons) return;
-        if(el.getAttribute('data-channel-disabled')){
-          alert('Bu satış kanalı şu an pasif. Hesap açılınca aktif edilebilir.');
-          return;
-        }
-        var ch = el.getAttribute('data-channel');
-        if(ch){
-          activeChannel = ch;
+        while(el && el!==channelButtons && !el.getAttribute('data-channel')) el = el.parentElement;
+        if(el && el.getAttribute('data-channel')){
+          activeChannel = el.getAttribute('data-channel');
           // Kanal değiştiyse sepetteki fiyatları güncelle
           syncCartPricesToChannel();
+          // Telefon dışına çıkınca kurye ücretini sıfırla
+          if(!isPhoneChannel(activeChannel)) setVal('deliveryFee','');
           renderPOS();
         }
       };
@@ -2196,9 +2188,9 @@ var SHEETS_SYNC = {
       }
       el.innerHTML = html;
 
-      // Kurye ücreti kullanılmıyor
+      // Telefon kanalında kurye ücreti alanını göster
       var feeRow = document.getElementById('deliveryFeeRow');
-      if(feeRow) feeRow.style.display = 'none';
+      if(feeRow) feeRow.style.display = isPhoneChannel(activeChannel) ? 'block' : 'none';
 
       setText('cartSubtotal', calcCartSubtotal().toFixed(2)+' ₺');
       setText('cartTotal', calcCartTotal().toFixed(2)+' ₺');
@@ -2290,8 +2282,8 @@ var SHEETS_SYNC = {
       }
 
       var subtotal = calcCartSubtotal();
-      var deliveryFee = 0;
-      var total = subtotal;
+      var deliveryFee = getDeliveryFee();
+      var total = subtotal + deliveryFee;
 
       var now = new Date();
       var sale = {
@@ -2364,7 +2356,7 @@ var SHEETS_SYNC = {
         html += '<tr>'
           + '<td>'+esc(ds)+'</td>'
           + '<td>'+esc(s.channel||'')+'</td>'
-          + '<td>'+esc(paymentLabel(s.method))+'</td>'
+          + '<td>'+esc((s.method||'').toUpperCase())+'</td>'
           + '<td>'+Number(s.total||0).toFixed(2)+' ₺</td>'
           + '<td>'+esc(itemsStr)+'</td>'
           + '<td><button class="btn btn-sm" type="button" onclick="openEditSale('+s.id+')">✏️</button></td>'
@@ -2374,55 +2366,55 @@ var SHEETS_SYNC = {
       tb.innerHTML = html || '<tr><td colspan="6" class="muted">Satış yok</td></tr>';
     }
 
-function filterSales(){
-  var b = getBranch();
-  if(!b) return;
+    function filterSales(){
+      var b = getBranch();
+      if(!b) return;
 
-  var from = getVal('salesDateFrom');
-  var to = getVal('salesDateTo');
-  var chFilter = getVal('salesChannelFilter');
-  var mFilter = getVal('salesMethodFilter');
-  var q = (getVal('salesSearch')||'').toLowerCase().trim();
+      var start = getVal('salesStartFilter');
+      var end = getVal('salesEndFilter');
+      var chFilter = getVal('salesChannelFilter');
+      var mFilter = getVal('salesMethodFilter');
+      var q = (getVal('salesSearch')||'').toLowerCase().trim();
 
-  var out = [];
-  for(var i=0; i<b.sales.length; i++){
-    var s = b.sales[i];
+      var out = [];
+      for(var i=0;i<b.sales.length;i++){
+        var s = b.sales[i];
+        var sKey = s.dateKey || istanbulDateKeyFromIso(s.date);
 
-    // Tarih aralığı (İstanbul dateKey)
-    var sKey = s.dateKey || istanbulDateKeyFromIso(s.date);
-    if(from && sKey < from) continue;
-    if(to && sKey > to) continue;
+        if(start && sKey && sKey < start) continue;
+        if(end && sKey && sKey > end) continue;
 
-    // Kanal
-    if(chFilter && chFilter!=='Hepsi'){
-      if((s.channel||'') !== chFilter) continue;
-    }
+        if(chFilter && chFilter!=='Hepsi'){
+          if((s.channel||'') !== chFilter) continue;
+        }
 
-    // Ödeme yöntemi
-    if(mFilter && mFilter!=='Hepsi'){
-      if((s.method||'') !== mFilter) continue;
-    }
+        // online -> iban (fail-safe)
+        var sm = String(s.method||'').trim().toLowerCase();
+        if(sm==='online') sm = 'iban';
 
-    // Arama
-    if(q){
-      var hay = (String(s.id)+' '+(s.channel||'')+' '+(s.method||'')+' ');
-      for(var j=0; j<(s.items||[]).length; j++){
-        hay += (s.items[j].name||'')+' ';
+        if(mFilter && mFilter!=='Hepsi'){
+          if(sm !== String(mFilter).trim().toLowerCase()) continue;
+        }
+
+        if(q){
+          var hay = (String(s.id)+' '+(s.channel||'')+' '+(s.method||'')+' ');
+          for(var j=0;j<s.items.length;j++){
+            hay += (s.items[j].name||'')+' ';
+          }
+          if(hay.toLowerCase().indexOf(q)===-1) continue;
+        }
+
+        out.push(s);
       }
-      if(hay.toLowerCase().indexOf(q)===-1) continue;
+
+      renderSalesTable(out);
     }
-
-    out.push(s);
-  }
-
-  renderSalesTable(out);
-}
 
     function renderSalesChannelFilter(extraChannel){
-      var channels = (state && Array.isArray(state.salesChannels) && state.salesChannels.length) ? state.salesChannels.slice() : ['Dükkan İçi'];
+      var channels = getActiveSalesChannels();
       if(extraChannel){
         var ex = String(extraChannel||'').trim();
-        if(ex && channels.indexOf(ex)===-1) channels.push(ex);
+        if(ex && channels.indexOf(ex)===-1) channels = channels.concat([ex]);
       }
 
       // Dashboard filtresi
@@ -2451,51 +2443,33 @@ function filterSales(){
     }
 
     function renderSalesMethodFilter(){
-      var methods = [
-        {k:'nakit', t:'Nakit'},
-        {k:'kart', t:'Kart'},
-        {k:'iban', t:'IBAN'},
-        {k:'yemeksepeti', t:'Yemeksepeti'}
-      ];
-
       // Dashboard filtresi
       var el = document.getElementById('salesMethodFilter');
       if(el){
         var prev = el.value || 'Hepsi';
-        var html = '<option value="Hepsi">Hepsi</option>';
-        for(var i=0;i<methods.length;i++){
-          html += '<option value="'+esc(methods[i].k)+'">'+esc(methods[i].t)+'</option>';
-        }
-        el.innerHTML = html;
-        if(prev) el.value = prev;
-      }
-    }
-
-
-      // Dashboard filtresi
-      var el = document.getElementById('salesChannelFilter');
-      if(el){
-        var prev = el.value || 'Hepsi';
-        var html = '<option value="Hepsi">Hepsi</option>';
-        for(var i=0;i<channels.length;i++){
-          html += '<option value="'+esc(channels[i])+'">'+esc(channels[i])+'</option>';
-        }
+        var html = '<option value="Hepsi">Hepsi</option>'
+          + '<option value="nakit">Nakit</option>'
+          + '<option value="kart">Kart</option>'
+          + '<option value="iban">IBAN</option>'
+          + '<option value="yemeksepeti">Yemeksepeti</option>';
         el.innerHTML = html;
         if(prev) el.value = prev;
       }
 
       // Satış düzenleme modalı
-      var el2 = document.getElementById('editSaleChannel');
+      var el2 = document.getElementById('editSaleMethod');
       if(el2){
         var prev2 = el2.value || '';
-        var html2 = '';
-        for(var j=0;j<channels.length;j++){
-          html2 += '<option value="'+esc(channels[j])+'">'+esc(channels[j])+'</option>';
-        }
+        var html2 = ''
+          + '<option value="nakit">Nakit</option>'
+          + '<option value="kart">Kart</option>'
+          + '<option value="iban">IBAN</option>'
+          + '<option value="yemeksepeti">Yemeksepeti</option>';
         el2.innerHTML = html2;
         if(prev2) el2.value = prev2;
       }
     }
+
 
     // ====== EDIT SALE MODAL ======
     var editingSaleId = null;
@@ -2515,7 +2489,7 @@ function filterSales(){
 
       renderSalesChannelFilter(sale.channel);
       setVal('editSaleChannel', sale.channel || getActiveSalesChannels()[0] || 'Dükkan İçi');
-      setVal('editSaleMethod', (sale.method==='online'?'iban':(sale.method||'nakit')));
+      setVal('editSaleMethod', sale.method || 'nakit');
       setVal('editDeliveryFee', (sale.deliveryFee!==undefined && sale.deliveryFee!==null) ? String(Number(sale.deliveryFee)||0) : '');
 
       // Kanal değişince fiyatları yeni kanala göre güncelle
@@ -2608,22 +2582,17 @@ function filterSales(){
 
     function updateEditSaleTotals(){
       if(!saleDraft) return;
+      var ch = getVal('editSaleChannel') || saleDraft.channel || 'Dükkan İçi';
 
-      // Kurye ücreti kullanılmıyor
+      // telefon ise kurye alanı açık
       var feeRow = document.getElementById('editDeliveryFeeRow');
-      if(feeRow) feeRow.style.display = 'none';
-      setVal('editDeliveryFee','');
+      if(feeRow) feeRow.style.display = (String(ch).trim().toLowerCase()==='telefon') ? 'block' : 'none';
 
       var sub = calcItemsTotal(saleDraft.items || []);
       var fee = 0;
-
-      saleDraft.subtotal = sub;
-      saleDraft.deliveryFee = 0;
-      saleDraft.total = sub;
-
-      setText('editSaleSubtotal', sub.toFixed(2)+' ₺');
-      setText('editSaleTotal', sub.toFixed(2)+' ₺');
-    }else{
+      if(String(ch).trim().toLowerCase()==='telefon'){
+        fee = Number(getVal('editDeliveryFee')||0) || 0;
+      }else{
         setVal('editDeliveryFee','');
       }
 
@@ -2720,8 +2689,8 @@ function filterSales(){
 
       // Totaller (telefon kurye dahil)
       sale.subtotal = calcItemsTotal(sale.items);
-      sale.deliveryFee = 0;
-      sale.total = (Number(sale.subtotal)||0);
+      sale.deliveryFee = (String(newChannel).trim().toLowerCase()==='telefon') ? (Number(getVal('editDeliveryFee')||0) || 0) : 0;
+      sale.total = (Number(sale.subtotal)||0) + (Number(sale.deliveryFee)||0);
 
       // dateKey yoksa geri doldur
       if(!sale.dateKey) sale.dateKey = istanbulDateKeyFromIso(sale.date);
@@ -2762,14 +2731,14 @@ function filterSales(){
 
     // ====== INVENTORY ======
 
-    function renderChannelPriceFields(prices, basePrice){
+    function renderChannelPriceFields(prices){
       var wrap = document.getElementById('channelPriceFields');
       if(!wrap) return;
 
-      var base = null;
-      if(basePrice!==undefined && basePrice!==null && basePrice!==''){
-        base = Number(basePrice);
-        if(isNaN(base)) base = null;
+      // Base fiyat: ürün formundaki "Fiyat" alanı (yoksa Dükkan İçi)
+      var base = Number(getVal('pPrice')||0) || 0;
+      if(!base && prices && prices['Dükkan İçi']!==undefined && prices['Dükkan İçi']!==null && prices['Dükkan İçi']!==''){
+        base = Number(prices['Dükkan İçi']) || 0;
       }
 
       var chans = state.salesChannels || [];
@@ -2779,29 +2748,39 @@ function filterSales(){
         if(!ch) continue;
         if(ch==='Dükkan İçi') continue;
 
+        var hasOwn = false;
         var v = '';
         if(prices && prices[ch]!==undefined && prices[ch]!==null && prices[ch]!==''){
+          hasOwn = true;
           v = String(prices[ch]);
+        }else{
+          // Boş görünmesin: varsayılan fiyatı göster (ama kaydederken override sayma)
+          v = (base ? String(base) : '');
         }
-        var ph = '(boş)';
-        if(base!==null){
-          ph = 'Varsayılan: ' + base.toFixed(2) + ' ₺';
-        }
+
+        var ph = (base ? Number(base).toFixed(2) : '(boş)');
+        var inh = hasOwn ? '0' : '1';
 
         html += '<div>'
           +   '<div class="muted" style="font-size:12px; margin-bottom:6px;">'+esc(ch)+'</div>'
-          +   '<input class="pChPrice" data-channel="'+esc(ch)+'" type="number" step="0.01" min="0" placeholder="'+esc(ph)+'" value="'+esc(v)+'">'
+          +   '<input class="pChPrice" data-channel="'+esc(ch)+'" data-inherited="'+inh+'" oninput="this.dataset.inherited=\'0\'" type="number" step="0.01" min="0" placeholder="'+esc(ph)+'" value="'+esc(v)+'" title="Boş bırakılan kanallar varsayılan Fiyat alanını kullanır.">'
           + '</div>';
       }
       wrap.innerHTML = html;
     }
 
-        html += '<div>'
-          +   '<div class="muted" style="font-size:12px; margin-bottom:6px;">'+esc(ch)+'</div>'
-          +   '<input class="pChPrice" data-channel="'+esc(ch)+'" type="number" step="0.01" min="0" placeholder="(boş)" value="'+esc(v)+'">'
-          + '</div>';
-      }
-      wrap.innerHTML = html;
+    function refreshInheritedChannelFields(){
+      var base = Number(getVal('pPrice')||0) || 0;
+      var ph = (base ? Number(base).toFixed(2) : '(boş)');
+      try{
+        var nodes = document.querySelectorAll('#channelPriceFields .pChPrice');
+        for(var i=0;i<nodes.length;i++){
+          nodes[i].placeholder = ph;
+          if(nodes[i].dataset && nodes[i].dataset.inherited==='1'){
+            nodes[i].value = (base ? String(base) : '');
+          }
+        }
+      }catch(e){}
     }
 
 
@@ -2812,7 +2791,7 @@ function filterSales(){
       setVal('pStock','');
       setVal('pIcon','');
       if(state.categories && state.categories[0]) setVal('pCat', state.categories[0]);
-      renderChannelPriceFields(null, getVal('pPrice'));
+      renderChannelPriceFields(null);
     }
 
     function saveProduct(){
@@ -2832,10 +2811,17 @@ function filterSales(){
           var ch = nodes[pi].getAttribute('data-channel') || '';
           ch = String(ch).trim();
           if(!ch || ch==='Dükkan İçi') continue;
+
           var vv = (nodes[pi].value||'').trim();
-          if(vv!==''){
-            prices[ch] = Number(vv)||0;
-          }
+          if(vv==='') continue;
+
+          var vnum = Number(vv)||0;
+          var inh = (nodes[pi].dataset && nodes[pi].dataset.inherited==='1');
+
+          // Eğer alan varsayılan fiyat ile otomatik dolduysa ve base ile aynıysa override sayma
+          if(inh && Number(price||0) === vnum) continue;
+
+          prices[ch] = vnum;
         }
       }catch(e){}
 
@@ -2882,7 +2868,7 @@ function filterSales(){
       setVal('pPrice', p.price);
       setVal('pStock', p.stock);
       setVal('pIcon', p.icon||'');
-      renderChannelPriceFields(p.prices || null, p.price);
+      renderChannelPriceFields(p.prices || null);
       switchView('inventory');
     }
 
@@ -2928,7 +2914,7 @@ function filterSales(){
       var sel3 = document.getElementById('invPriceChannel');
       if(sel3){
         var html3 = '';
-        var chans = (state && state.salesChannels && state.salesChannels.length) ? state.salesChannels : ['Dükkan İçi'];
+        var chans = getActiveSalesChannels();
         for(i=0;i<chans.length;i++){
           html3 += '<option value="'+esc(chans[i])+'">'+esc(chans[i])+'</option>';
         }
@@ -2936,7 +2922,7 @@ function filterSales(){
         if(!sel3.value && chans[0]) sel3.value = chans[0];
       }
 
-      renderChannelPriceFields(null, getVal('pPrice'));
+      renderChannelPriceFields(null);
     }
 
     function filterProducts(){
@@ -3696,39 +3682,11 @@ return {
       var tbtn = document.getElementById('themeToggle');
       if(tbtn) tbtn.onclick = toggleTheme;
 
-      
-      // Ürün fiyatı değişince kanal fiyat placeholderlarını güncelle (mevcut girilenleri bozmadan)
+      // Fiyat alanı değiştikçe kanal fiyatlarındaki varsayılan değerleri güncelle
       var pPriceEl = document.getElementById('pPrice');
-      if(pPriceEl){
-        pPriceEl.oninput = function(){
-          try {
-    var nodes = document.querySelectorAll('#channelPriceFields .pChPrice');
-    // Döngü başlangıcı
-    for (var i = 0; i < nodes.length; i++) {
-        var ch = nodes[i].getAttribute('data-channel') || '';
-        ch = String(ch).trim();
-        
-        // continue kullanımı artık güvenli çünkü for döngüsü içindeyiz
-        if (!ch) continue; 
-        
-        var vv = (nodes[i].value || '').trim();
-        if (vv !== '') cur[ch] = Number(vv) || 0;
-    } // Döngü bitişi
-    
-    renderChannelPriceFields(cur, pPriceEl.value);
-    
-    var nodes2 = document.querySelectorAll('#channelPriceFields .pChPrice');
-    for (var j = 0; j < nodes2.length; j++) {
-        var ch2 = nodes2[j].getAttribute('data-channel') || '';
-        ch2 = String(ch2).trim();
-        if (cur[ch2] !== undefined) nodes2[j].value = String(cur[ch2]);
-    }
-} catch (e) {
-    console.error("Hata:", e);
-}
-        };
-      }
-// filtre dropdown'ları ilk kez doldur
+      if(pPriceEl) pPriceEl.addEventListener('input', refreshInheritedChannelFields);
+
+      // filtre dropdown'ları ilk kez doldur
       renderSelectors();
 
       // default tarih alanları
