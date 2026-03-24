@@ -708,6 +708,7 @@
             <span id="syncPill" class="sync-pill sync-warn">⏳ Hazırlanıyor…</span>
             <span id="syncLast" class="sync-pill">Son: -</span>
           </div>
+          <div id="syncPendingInfo" class="muted" style="font-size:12px; margin-bottom:8px;">Bekleyen kayıt kontrol ediliyor…</div>
           <div class="sync-row">
             <button class="btn btn-sm btn-primary" id="btnGoogleConnect" type="button">🔐 Google Bağlan</button>
             <button class="btn btn-sm" id="btnSyncPull" type="button">⬇️ Çek</button>
@@ -920,6 +921,10 @@
                 <div class="muted" style="font-size:12px; margin-bottom:6px;">Stok</div>
                 <input id="pStock" type="number" step="1" min="0" placeholder="0">
               </div>
+              <div style="flex:1; min-width:160px;">
+                <div class="muted" style="font-size:12px; margin-bottom:6px;">Sıra No</div>
+                <input id="pOrder" type="number" step="1" min="1" placeholder="1">
+              </div>
             </div>
             
             <div style="margin-top:12px;">
@@ -932,6 +937,47 @@
               <input type="hidden" id="pId">
               <button class="btn btn-primary" type="button" onclick="saveProduct()">💾 Kaydet</button>
               <button class="btn" type="button" onclick="resetProductForm()">↩️ Sıfırla</button>
+            </div>
+
+            <div style="margin-top:14px; border-top:1px solid var(--border); padding-top:12px;">
+              <h2 style="margin-bottom:10px;">
+                <span>Stok Ekle / Çıkar</span>
+                <span class="muted" style="font-size:12px;">Hareket kaydı</span>
+              </h2>
+
+              <div class="row" style="flex-wrap:wrap; gap:10px;">
+                <div style="flex:2; min-width:220px;">
+                  <div class="muted" style="font-size:12px; margin-bottom:6px;">Ürün</div>
+                  <select id="stockMoveProduct"></select>
+                </div>
+                <div style="flex:1; min-width:160px;">
+                  <div class="muted" style="font-size:12px; margin-bottom:6px;">İşlem</div>
+                  <select id="stockMoveType">
+                    <option value="in">Stok Girişi (+)</option>
+                    <option value="out">Stok Çıkışı (-)</option>
+                    <option value="set">Sayım Düzeltme (=)</option>
+                  </select>
+                </div>
+                <div style="flex:1; min-width:140px;">
+                  <div class="muted" style="font-size:12px; margin-bottom:6px;">Miktar</div>
+                  <input id="stockMoveQty" type="number" step="1" min="0" placeholder="0">
+                </div>
+              </div>
+
+              <div class="row" style="flex-wrap:wrap; gap:10px; margin-top:10px;">
+                <div style="flex:1; min-width:220px;">
+                  <div class="muted" style="font-size:12px; margin-bottom:6px;">Not (opsiyonel)</div>
+                  <input id="stockMoveNote" placeholder="Örn: Tedarik giriş / fire / sayım düzeltmesi">
+                </div>
+                <button class="btn btn-success" type="button" onclick="applyStockMovement()">✅ Uygula</button>
+              </div>
+
+              <div class="row" style="gap:8px; flex-wrap:wrap; margin-top:10px;">
+                <button class="btn btn-sm" type="button" onclick="quickStockAdd(5)">+5</button>
+                <button class="btn btn-sm" type="button" onclick="quickStockAdd(10)">+10</button>
+                <button class="btn btn-sm" type="button" onclick="quickStockAdd(20)">+20</button>
+              </div>
+              <div id="stockMoveStatus" class="muted" style="margin-top:8px; min-height:16px;"></div>
             </div>
           </div>
 
@@ -961,6 +1007,7 @@
               <table id="inventoryTable">
                 <thead>
                   <tr>
+                    <th>Sıra</th>
                     <th>Ürün</th>
                     <th>Kategori</th>
                     <th>Fiyat</th>
@@ -970,6 +1017,25 @@
                 </thead>
                 <tbody id="inventoryBody"></tbody>
               </table>
+            </div>
+
+            <div style="margin-top:12px;">
+              <div class="muted" style="font-size:12px; margin-bottom:6px;">Son Stok Hareketleri</div>
+              <div style="overflow:auto; max-height:300px;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Tarih</th>
+                      <th>Ürün</th>
+                      <th>İşlem</th>
+                      <th>Değişim</th>
+                      <th>Stok</th>
+                      <th>Not</th>
+                    </tr>
+                  </thead>
+                  <tbody id="stockMovesBody"></tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -2046,8 +2112,8 @@ var SHEETS_SYNC = {
       expenseTypes: ['Kira','Elektrik','Su','Doğalgaz','Personel','Malzeme','Mutfak Gideri','Diğer'],
       salesChannels: ['Dükkan İçi','Telefon','Yemeksepeti','Getir','Trendyol Yemek'],
       branches: {
-        hastane: { name:'Hastane Şubesi', products:[], sales:[], expenses:[] },
-        cihanpol:{ name:'Cihanpol Şubesi', products:[], sales:[], expenses:[] }
+        hastane: { name:'Hastane Şubesi', products:[], sales:[], expenses:[], stockMoves:[] },
+        cihanpol:{ name:'Cihanpol Şubesi', products:[], sales:[], expenses:[], stockMoves:[] }
       }
     };
 
@@ -2156,6 +2222,24 @@ var SHEETS_SYNC = {
       return inferCategoryFromName(productName || '');
     }
 
+    function normalizeProductOrder(v, fallback){
+      var n = Number(v);
+      if(isFinite(n) && n > 0) return Math.floor(n);
+      var fb = Number(fallback);
+      if(isFinite(fb) && fb > 0) return Math.floor(fb);
+      return 1;
+    }
+
+    function getNextProductOrder(branch){
+      var arr = (branch && Array.isArray(branch.products)) ? branch.products : [];
+      var maxOrder = 0;
+      for(var i=0;i<arr.length;i++){
+        var o = Number(arr[i] && arr[i].order);
+        if(isFinite(o) && o > maxOrder) maxOrder = Math.floor(o);
+      }
+      return maxOrder + 1;
+    }
+
     function normalizeAndBackfill(st){
       // temel alanlar yoksa ekle
       if(!st.categories || !Array.isArray(st.categories) || st.categories.length===0) st.categories = deepClone(DEFAULTS.categories);
@@ -2201,6 +2285,7 @@ var SHEETS_SYNC = {
         if(!Array.isArray(st.branches[k].products)) st.branches[k].products = [];
         if(!Array.isArray(st.branches[k].sales)) st.branches[k].sales = [];
         if(!Array.isArray(st.branches[k].expenses)) st.branches[k].expenses = [];
+        if(!Array.isArray(st.branches[k].stockMoves)) st.branches[k].stockMoves = [];
 
         // Katalogu DEFAULTS ile hizala: fiyat/kategori/ürün listesi standart, stok eski kayıttan korunur.
         var existingProducts = Array.isArray(st.branches[k].products) ? st.branches[k].products : [];
@@ -2243,6 +2328,8 @@ var SHEETS_SYNC = {
           if(isFinite(stockVal) && stockVal>=0) dp.stock = stockVal;
           else dp.stock = Number(dp.stock)||0;
 
+          dp.order = normalizeProductOrder(src ? src.order : dp.order, dj + 1);
+
           rebuilt.push(dp);
         }
         st.branches[k].products = rebuilt;
@@ -2267,6 +2354,7 @@ var SHEETS_SYNC = {
                 pr.prices[ch2] = Number(pr.prices[ch2])||0;
               }
             }
+            pr.order = normalizeProductOrder(pr.order, pi + 1);
           }
         }catch(e){}
 
@@ -2299,6 +2387,27 @@ var SHEETS_SYNC = {
             if(s.total===undefined || s.total===null || s.total===''){
               s.total = (Number(s.subtotal)||0) + (Number(s.deliveryFee)||0);
             }
+          }
+        }catch(e){}
+
+        // Stok hareketleri: temel alanlar ve tip uyumluluğu
+        try{
+          var movesArr = st.branches[k].stockMoves || [];
+          for(var mi=0; mi<movesArr.length; mi++){
+            var mv = movesArr[mi] || {};
+            mv.kind = String(mv.kind || '').trim();
+            if(mv.kind!=='in' && mv.kind!=='out' && mv.kind!=='set') mv.kind = 'in';
+            mv.productId = Number(mv.productId)||0;
+            mv.productName = String(mv.productName || '');
+            mv.qty = Number(mv.qty)||0;
+            mv.delta = Number(mv.delta)||0;
+            mv.before = Number(mv.before)||0;
+            mv.after = Number(mv.after)||0;
+            mv.note = String(mv.note || '');
+            if(!mv.date){
+              try{ mv.date = new Date().toISOString(); }catch(e2){ mv.date=''; }
+            }
+            if(!mv.dateKey && mv.date) mv.dateKey = istanbulDateKeyFromIso(mv.date);
           }
         }catch(e){}
 
@@ -2450,16 +2559,16 @@ var SHEETS_SYNC = {
       if(d2) d2.textContent = 'Kaynak: ' + (dataSourceKey || '-');
     }
 
-    function save(silent){
+    function save(silent, skipSyncMark){
       try{
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         dataSourceKey = STORAGE_KEY;
         if(!silent) showSaveStatus('Kaydedildi', 'success');
         updateDataSourceLabels();
 
-        // Sheets push (debounced)
-        if(SheetsSync && SheetsSync.isConnected && SheetsSync.isConnected()){
-          SheetsSync.pushDebounced();
+        // Sheets: local değişikliği bekleyen senkrona işaretle
+        if(!skipSyncMark && SheetsSync && SheetsSync.markLocalChange){
+          SheetsSync.markLocalChange();
         }
 
         return true;
@@ -2679,6 +2788,7 @@ var SHEETS_SYNC = {
     var activePayMethod = 'nakit';
     var cart = [];
     var cartStatusTimer = null;
+    var stockMoveProductPref = '';
 
 
     // ====== TIMEZONE SAFE DATEKEY (Europe/Istanbul) ======
@@ -2804,41 +2914,21 @@ var SHEETS_SYNC = {
       }, 2400);
     }
 
-    function getProductSalesQtyMap(branch){
-      var out = {};
-      if(!branch || !Array.isArray(branch.sales)) return out;
-      for(var i=0;i<branch.sales.length;i++){
-        var sale = branch.sales[i];
-        var items = (sale && Array.isArray(sale.items)) ? sale.items : [];
-        for(var j=0;j<items.length;j++){
-          var it = items[j] || {};
-          var key = String(it.id || '');
-          var qty = Number(it.qty) || 0;
-          if(!key || qty <= 0) continue;
-          out[key] = (Number(out[key]) || 0) + qty;
-        }
-      }
-      return out;
-    }
-
     function sortProductsForPOS(branch, products){
       var list = Array.isArray(products) ? products.slice() : [];
       if(list.length <= 1) return list;
 
-      var soldQty = getProductSalesQtyMap(branch);
       var baseOrder = {};
-      for(var i=0;i<list.length;i++){
-        baseOrder[String(list[i].id || '')] = i;
-      }
+      for(var i=0;i<list.length;i++) baseOrder[String(list[i].id || i)] = i;
 
       list.sort(function(a, b){
-        var qa = Number(soldQty[String(a.id || '')]) || 0;
-        var qb = Number(soldQty[String(b.id || '')]) || 0;
-        if(qb !== qa) return qb - qa;
-
-        var oa = baseOrder[String(a.id || '')];
-        var ob = baseOrder[String(b.id || '')];
+        var oa = normalizeProductOrder(a && a.order, 999999);
+        var ob = normalizeProductOrder(b && b.order, 999999);
         if(oa !== ob) return oa - ob;
+
+        var ia = baseOrder[String(a.id || '')];
+        var ib = baseOrder[String(b.id || '')];
+        if(ia !== ib) return ia - ib;
 
         return String(a.name || '').localeCompare(String(b.name || ''), 'tr', { sensitivity:'base' });
       });
@@ -3656,12 +3746,178 @@ var SHEETS_SYNC = {
       }catch(e){}
     }
 
+    function stockMoveKindLabel(kind){
+      if(kind==='in') return 'Giriş';
+      if(kind==='out') return 'Çıkış';
+      if(kind==='set') return 'Sayım';
+      return kind || '-';
+    }
+
+    function showStockMoveStatus(msg, type){
+      var el = document.getElementById('stockMoveStatus');
+      if(!el) return;
+      el.textContent = String(msg || '');
+      el.style.color = (type==='success') ? 'var(--success)' : (type==='error' ? 'var(--danger)' : 'var(--muted)');
+    }
+
+    function renderStockMoveProductOptions(){
+      var sel = document.getElementById('stockMoveProduct');
+      if(!sel) return;
+      var b = getBranch();
+      if(!b) return;
+
+      var list = sortProductsForPOS(b, b.products || []);
+      var current = stockMoveProductPref || String(sel.value || '');
+      var html = '';
+      for(var i=0;i<list.length;i++){
+        var p = list[i];
+        var stockTxt = 'Stok: ' + (Number(p.stock)||0);
+        html += '<option value="'+esc(p.id)+'">'+esc((p.order||'-') + ' - ' + p.name + ' (' + stockTxt + ')')+'</option>';
+      }
+      sel.innerHTML = html;
+
+      var hasCurrent = false;
+      for(i=0;i<list.length;i++){
+        if(String(list[i].id)===String(current)) { hasCurrent = true; break; }
+      }
+      if(!hasCurrent) current = list[0] ? String(list[0].id) : '';
+      if(current) sel.value = current;
+      stockMoveProductPref = current;
+      sel.onchange = function(){ stockMoveProductPref = String(sel.value || ''); };
+    }
+
+    function renderStockMovesTable(){
+      var tb = document.getElementById('stockMovesBody');
+      var b = getBranch();
+      if(!tb || !b) return;
+
+      var arr = (b.stockMoves || []).slice().sort(function(a, c){
+        return (new Date(c.date)) - (new Date(a.date));
+      });
+      var html = '';
+      var limit = Math.min(arr.length, 120);
+      for(var i=0;i<limit;i++){
+        var m = arr[i] || {};
+        var d = m.date ? new Date(m.date) : null;
+        var ds = (!d || isNaN(d.getTime())) ? '-' : d.toLocaleString('tr-TR');
+        var delta = Number(m.delta)||0;
+        var deltaText = (delta>0 ? '+' : '') + String(delta);
+        var stockTxt = String(Number(m.before)||0) + ' → ' + String(Number(m.after)||0);
+
+        html += '<tr>'
+          + '<td>'+esc(ds)+'</td>'
+          + '<td>'+esc(m.productName || ('#'+String(m.productId||'')))+'</td>'
+          + '<td>'+esc(stockMoveKindLabel(m.kind))+'</td>'
+          + '<td>'+esc(deltaText)+'</td>'
+          + '<td>'+esc(stockTxt)+'</td>'
+          + '<td>'+esc(m.note || '')+'</td>'
+          + '</tr>';
+      }
+      tb.innerHTML = html || '<tr><td colspan="6" class="muted">Stok hareketi yok</td></tr>';
+    }
+
+    function renderStockMovementUI(){
+      renderStockMoveProductOptions();
+      renderStockMovesTable();
+
+      var typeSel = document.getElementById('stockMoveType');
+      var qtyEl = document.getElementById('stockMoveQty');
+      if(typeSel && !typeSel.value) typeSel.value = 'in';
+      if(typeSel && qtyEl){
+        var refreshHint = function(){
+          qtyEl.placeholder = (typeSel.value==='set') ? 'Yeni stok' : 'Miktar';
+        };
+        typeSel.onchange = refreshHint;
+        refreshHint();
+      }
+    }
+
+    function applyStockMovement(){
+      var b = getBranch();
+      if(!b) return;
+
+      var pid = Number(getVal('stockMoveProduct') || 0);
+      var kind = String(getVal('stockMoveType') || 'in').trim();
+      var qtyRaw = String(getVal('stockMoveQty') || '').trim();
+      var qtyNum = Number(qtyRaw);
+      var note = String(getVal('stockMoveNote') || '').trim();
+
+      var p = findProduct(b.products, pid);
+      if(!p){ showStockMoveStatus('Ürün seçin.', 'error'); return; }
+      if(kind!=='in' && kind!=='out' && kind!=='set'){ showStockMoveStatus('İşlem tipi hatalı.', 'error'); return; }
+
+      var before = Number(p.stock)||0;
+      var after = before;
+      var delta = 0;
+      var qty = 0;
+
+      if(kind==='set'){
+        if(!isFinite(qtyNum) || qtyNum < 0){ showStockMoveStatus('Yeni stok değeri girin (0 veya daha büyük).', 'error'); return; }
+        qty = Math.floor(qtyNum);
+        after = qty;
+        delta = after - before;
+      }else{
+        if(!isFinite(qtyNum) || qtyNum <= 0){ showStockMoveStatus('Miktar 1 veya daha büyük olmalı.', 'error'); return; }
+        qty = Math.floor(qtyNum);
+        if(kind==='out'){
+          if(qty > before){ showStockMoveStatus('Yetersiz stok. Mevcut: '+before, 'error'); return; }
+          delta = -qty;
+        }else{
+          delta = qty;
+        }
+        after = before + delta;
+      }
+
+      p.stock = after;
+
+      var now = new Date();
+      var move = {
+        id: newId(),
+        date: now.toISOString(),
+        dateKey: istanbulDateKeyFromDate(now),
+        productId: p.id,
+        productName: p.name,
+        kind: kind,
+        qty: qty,
+        delta: delta,
+        before: before,
+        after: after,
+        note: note
+      };
+      b.stockMoves.push(move);
+      if(SheetsSync && SheetsSync.isReady && SheetsSync.isReady() && SheetsSync.logStock){
+        SheetsSync.logStock(getBranchKey(), move);
+      }
+
+      save();
+      stockMoveProductPref = String(p.id);
+      setVal('stockMoveQty', '');
+      setVal('stockMoveNote', '');
+      filterProducts();
+      renderStockMovementUI();
+
+      var active = document.querySelector('.page-view.active');
+      if(active && active.id==='view-pos') renderPOS();
+
+      showStockMoveStatus('Stok güncellendi: ' + p.name + ' (' + before + ' → ' + after + ').', 'success');
+    }
+
+    function quickStockAdd(step){
+      var n = Number(step)||0;
+      if(n<=0) return;
+      setVal('stockMoveType', 'in');
+      setVal('stockMoveQty', String(Math.floor(n)));
+      applyStockMovement();
+    }
+
 
     function resetProductForm(){
+      var b = getBranch();
       setVal('pId','');
       setVal('pName','');
       setVal('pPrice','');
       setVal('pStock','');
+      setVal('pOrder', String(getNextProductOrder(b)));
       if(state.categories && state.categories[0]) setVal('pCat', state.categories[0]);
       renderChannelPriceFields(null);
     }
@@ -3673,6 +3929,8 @@ var SHEETS_SYNC = {
       var cat = getVal('pCat');
       var price = Number(getVal('pPrice')||0);
       var stock = Number(getVal('pStock')||0);
+      var orderRaw = String(getVal('pOrder') || '').trim();
+      var orderVal = (orderRaw === '') ? NaN : Number(orderRaw);
 
       // Kanal bazlı fiyatlar
       var prices = { 'Dükkan İçi': price };
@@ -3708,6 +3966,7 @@ var SHEETS_SYNC = {
         p.price = price;
         p.stock = stock;
         p.prices = prices;
+        p.order = normalizeProductOrder(orderVal, p.order);
       }else{
         // new
         var id = newId();
@@ -3717,7 +3976,8 @@ var SHEETS_SYNC = {
           cat:cat,
           price:price,
           stock:stock,
-          prices: prices
+          prices: prices,
+          order: normalizeProductOrder(orderVal, getNextProductOrder(b))
         });
       }
 
@@ -3736,6 +3996,7 @@ var SHEETS_SYNC = {
       setVal('pCat', p.cat);
       setVal('pPrice', p.price);
       setVal('pStock', p.stock);
+      setVal('pOrder', normalizeProductOrder(p.order, 1));
       renderChannelPriceFields(p.prices || null);
       switchView('inventory');
     }
@@ -3758,6 +4019,7 @@ var SHEETS_SYNC = {
     function renderInventory(){
       renderInventoryFilters();
       filterProducts();
+      renderStockMovementUI();
     }
 
     function renderInventoryFilters(){
@@ -3791,6 +4053,7 @@ var SHEETS_SYNC = {
       }
 
       renderChannelPriceFields(null);
+      if(!getVal('pId')) setVal('pOrder', String(getNextProductOrder(getBranch())));
     }
 
     function filterProducts(){
@@ -3805,6 +4068,7 @@ var SHEETS_SYNC = {
         if(q && (p.name||'').toLowerCase().indexOf(q)===-1) continue;
         list.push(p);
       }
+      list = sortProductsForPOS(b, list);
       renderInventoryTable(list);
     }
 
@@ -3816,6 +4080,7 @@ var SHEETS_SYNC = {
       for(var i=0;i<list.length;i++){
         var p = list[i];
         html += '<tr>'
+          + '<td>'+normalizeProductOrder(p.order, i+1)+'</td>'
           + '<td>'+esc(p.name)+'</td>'
           + '<td>'+esc(p.cat||'')+'</td>'
           + '<td>'+Number(getProductPrice(p, (getVal('invPriceChannel')||'Dükkan İçi'))).toFixed(2)+' ₺</td>'
@@ -3826,7 +4091,7 @@ var SHEETS_SYNC = {
           + '</td>'
           + '</tr>';
       }
-      tb.innerHTML = html || '<tr><td colspan="5" class="muted">Ürün yok</td></tr>';
+      tb.innerHTML = html || '<tr><td colspan="6" class="muted">Ürün yok</td></tr>';
     }
 
     // ====== EXPENSES ======
@@ -4051,6 +4316,9 @@ alert('Gider eklendi!');
       var pullTimer = null;
       var pullInFlight = false;
       var pushInFlight = false;
+      var PENDING_STATE_KEY = 'SHEETS_PENDING_STATE_SYNC';
+      var pendingStateSync = false;
+      try{ pendingStateSync = localStorage.getItem(PENDING_STATE_KEY) === '1'; }catch(e){}
 
       function hashStr(str){
         // Fast deterministic hash (djb2). Good enough for change detection.
@@ -4060,6 +4328,34 @@ alert('Gider eklendi!');
       }
 
       function nowIso(){ return new Date().toISOString(); }
+
+      function getPendingOpsCount(){
+        return (opsQueue && opsQueue.length) ? opsQueue.length : 0;
+      }
+      function getPendingTotalCount(){
+        return (pendingStateSync ? 1 : 0) + getPendingOpsCount();
+      }
+      function setPendingState(flag){
+        pendingStateSync = !!flag;
+        try{ localStorage.setItem(PENDING_STATE_KEY, pendingStateSync ? '1' : '0'); }catch(e){}
+        updatePendingInfo();
+      }
+      function updatePendingInfo(){
+        var el = document.getElementById('syncPendingInfo');
+        if(!el) return;
+        var pendingOps = getPendingOpsCount();
+        if(!pendingStateSync && pendingOps===0){
+          el.textContent = 'Bekleyen kayıt yok';
+          el.style.color = 'var(--success)';
+          return;
+        }
+        var parts = [];
+        if(pendingStateSync) parts.push('durum');
+        if(pendingOps>0) parts.push(String(pendingOps) + ' hareket');
+        el.textContent = 'Bekleyen senkron: ' + parts.join(' + ');
+        el.style.color = 'var(--warning)';
+      }
+
       // --- TOKEN PERSIST / AUTO-RECONNECT (sessionStorage + silent refresh) ---
       var SESSION_TOKEN_KEY = 'SHEETS_ACCESS_TOKEN';
       var SESSION_TOKEN_EXP_KEY = 'SHEETS_ACCESS_TOKEN_EXP';
@@ -4077,6 +4373,7 @@ alert('Gider eklendi!');
           sessionStorage.removeItem(SESSION_TOKEN_KEY);
           sessionStorage.removeItem(SESSION_TOKEN_EXP_KEY);
         }catch(e){}
+        updatePendingInfo();
       }
 
       function storeSessionToken(token, expiresInSec){
@@ -4101,9 +4398,9 @@ alert('Gider eklendi!');
             setLast(nowIso());
             // sayfa yenilemede otomatik devam
             startAutoPull();
-            // token varsa bir kez çekelim
-            pull();
-            setTimeout(flushOpsQueue, 300);
+            // Önce bekleyenleri gönder, sonra çek
+            setTimeout(syncTick, 300);
+            updatePendingInfo();
             return true;
           }
         }catch(e){}
@@ -4194,6 +4491,7 @@ alert('Gider eklendi!');
           deviceId = 'dev_' + Date.now() + '_' + Math.floor(Math.random()*1e9);
           localStorage.setItem('SHEETS_DEVICE_ID', deviceId);
         }
+        updatePendingInfo();
 
         if(!SHEETS_SYNC.enabled){
           var msg = SHEETS_SYNC_BLOCK_REASON ? ('⛔ ' + SHEETS_SYNC_BLOCK_REASON) : '⛔ Kapalı';
@@ -4202,12 +4500,14 @@ alert('Gider eklendi!');
           if(hint && SHEETS_SYNC_BLOCK_REASON){
             hint.textContent = 'Senkron devre dışı: ' + SHEETS_SYNC_BLOCK_REASON + ' (' + (window.location.origin || '-') + ')';
           }
+          updatePendingInfo();
           return;
         }
 
         // GIS script'i geç gelirse: onload callback ile tekrar init
         if(!(window.google && google.accounts && google.accounts.oauth2)){
           pill('sync-warn','⏳ Google auth hazır değil');
+          updatePendingInfo();
           return;
         }
 
@@ -4226,11 +4526,9 @@ alert('Gider eklendi!');
                 pill('sync-ok','✅ Bağlandı');
                 setLast(nowIso());
 
-                // otomatik çek + kuyruğu boşalt
-                if(tokenPurpose !== 'refresh'){
-                  pull();
-                  setTimeout(flushOpsQueue, 300);
-                }
+                // Önce bekleyenleri gönder, sonra çek
+                setTimeout(syncTick, 250);
+                updatePendingInfo();
 
                 // auto-pull devam etsin
                 startAutoPull();
@@ -4315,9 +4613,11 @@ alert('Gider eklendi!');
        // ---- OPS APPEND (satır ekleme) ----
       var opsQueue = [];
       try { opsQueue = JSON.parse(localStorage.getItem('SHEETS_OPS_QUEUE') || '[]') || []; } catch(e){ opsQueue = []; }
+      updatePendingInfo();
 
       function saveOpsQueue(){
         try{ localStorage.setItem('SHEETS_OPS_QUEUE', JSON.stringify(opsQueue)); }catch(e){}
+        updatePendingInfo();
       }
       function enqueueOpRow(row){
         opsQueue.push(row);
@@ -4337,20 +4637,26 @@ alert('Gider eklendi!');
       }
 
       function flushOpsQueue(){
-        if(!accessToken) return;
-        if(!opsQueue.length) return;
+        if(!accessToken) return Promise.resolve(false);
+        if(!opsQueue.length){
+          updatePendingInfo();
+          return Promise.resolve(false);
+        }
 
         var batch = opsQueue.slice();
         opsQueue = [];
         saveOpsQueue();
 
-        appendOpsRows(batch).then(function(){
+        return appendOpsRows(batch).then(function(){
           setLast(nowIso());
+          updatePendingInfo();
+          return true;
         }).catch(function(err){
           console.warn(err);
           // geri koy (kaybolmasın)
           opsQueue = batch.concat(opsQueue);
           saveOpsQueue();
+          return false;
         });
       }
 
@@ -4371,6 +4677,7 @@ alert('Gider eklendi!');
 
         appendOpsRows([row]).then(function(){
           setLast(nowIso());
+          updatePendingInfo();
         }).catch(function(err){
           console.warn(err);
           enqueueOpRow(row);
@@ -4395,10 +4702,49 @@ alert('Gider eklendi!');
 
         appendOpsRows([row]).then(function(){
           setLast(nowIso());
+          updatePendingInfo();
         }).catch(function(err){
           console.warn(err);
           enqueueOpRow(row);
         });
+      }
+
+      function logStock(branchKey, move){
+        // timestamp, branch, type=stock, moveId, delta, kind, productName, detailsJson
+        var row = [
+          nowIso(),
+          String(branchKey || ''),
+          'stock',
+          String(move && move.id || ''),
+          String(Number(move && move.delta || 0)),
+          String(move && move.kind || ''),
+          String(move && move.productName || ''),
+          JSON.stringify({
+            productId: Number(move && move.productId || 0),
+            qty: Number(move && move.qty || 0),
+            before: Number(move && move.before || 0),
+            after: Number(move && move.after || 0),
+            note: String(move && move.note || '')
+          })
+        ];
+
+        if(!accessToken){ enqueueOpRow(row); pill('sync-warn','🔐 Bağlan'); return; }
+
+        appendOpsRows([row]).then(function(){
+          setLast(nowIso());
+          updatePendingInfo();
+        }).catch(function(err){
+          console.warn(err);
+          enqueueOpRow(row);
+        });
+      }
+
+      function markLocalChange(){
+        if(!SHEETS_SYNC.enabled) return;
+        if(isApplyingRemote) return;
+        setPendingState(true);
+        if(accessToken) pushDebounced();
+        else pill('sync-warn','🔐 Bağlan');
       }
 
       function pushDebounced(){
@@ -4412,6 +4758,7 @@ alert('Gider eklendi!');
 
         if(!accessToken){
           pill('sync-warn','🔐 Bağlan');
+          updatePendingInfo();
           return;
         }
 
@@ -4437,13 +4784,17 @@ alert('Gider eklendi!');
           localStorage.setItem('SHEETS_LAST_PULL_REV', String(lastPullRev));
           lastPullHash = hashStr(values[0][3]);
           localStorage.setItem('SHEETS_LAST_PULL_HASH', lastPullHash);
+          setPendingState(false);
           pill('sync-ok','✅ Senkron');
           setLast(nowIso());
         }).catch(function(err){
           console.warn(err);
+          setPendingState(true);
           pill('sync-bad','❌ Gönderme hata');
         }).then(function(){
           pushInFlight = false;
+          updatePendingInfo();
+          if(accessToken) setTimeout(syncTick, 60);
         });
       }
 
@@ -4451,6 +4802,11 @@ alert('Gider eklendi!');
         if(!SHEETS_SYNC.enabled) return;
         if(!accessToken){
           pill('sync-warn','🔐 Bağlan');
+          updatePendingInfo();
+          return;
+        }
+        if(!force && (pendingStateSync || getPendingOpsCount()>0)){
+          syncTick();
           return;
         }
 
@@ -4467,6 +4823,7 @@ alert('Gider eklendi!');
           var row = (data && data.values && data.values[0]) ? data.values[0] : null;
           if(!row || row.length < 4){
             pill('sync-warn','ℹ️ Boş');
+            updatePendingInfo();
             return;
           }
           var rev = Number(row[0] || 0);
@@ -4480,6 +4837,7 @@ alert('Gider eklendi!');
           if(!force && rev && rev <= lastPullRev && remoteHash && remoteHash === lastPullHash){
             pill('sync-ok','✅ Güncel');
             setLast(updatedAt || nowIso());
+            updatePendingInfo();
             return;
           }
 
@@ -4487,12 +4845,13 @@ alert('Gider eklendi!');
           try{ remoteState = JSON.parse(remoteJson); }catch(e){ remoteState=null; }
           if(!remoteState){
             pill('sync-bad','❌ JSON bozuk');
+            updatePendingInfo();
             return;
           }
 
           isApplyingRemote = true;
           state = normalizeAndBackfill(remoteState);
-          save(true); // local güncelle
+          save(true, true); // local güncelle (remote pull -> tekrar push etme)
           renderAll();
           isApplyingRemote = false;
 
@@ -4505,36 +4864,67 @@ alert('Gider eklendi!');
 
           pill('sync-ok','✅ Güncellendi');
           setLast(updatedAt || nowIso());
+          updatePendingInfo();
         }).catch(function(err){
           console.warn(err);
           pill('sync-bad','❌ Çekme hata');
+          updatePendingInfo();
         }).then(function(){
           pullInFlight = false;
         });
       }
 
+      function syncTick(){
+        if(!SHEETS_SYNC.enabled) return;
+        updatePendingInfo();
+        if(document.hidden) return;
+        if(!accessToken){
+          if(getPendingTotalCount()>0) pill('sync-warn','🔐 Bağlan');
+          return;
+        }
+        if(pullInFlight || pushInFlight) return;
+
+        if(getPendingOpsCount()>0){
+          pill('sync-warn','⬆️ Bekleyen hareket gönderiliyor…');
+          flushOpsQueue().then(function(sent){
+            if(!sent) return;
+            if(pendingStateSync) push();
+            else pull();
+          });
+          return;
+        }
+
+        if(pendingStateSync){
+          push();
+          return;
+        }
+
+        pull();
+      }
+
       function startAutoPull(){
         if(pullTimer) clearInterval(pullTimer);
-        pullTimer = setInterval(function(){
-          if(document.hidden) return;
-          if(!accessToken) return;
-          pull();
-        }, 10000);
+        pullTimer = setInterval(syncTick, 5000);
+        setTimeout(syncTick, 80);
       }
 
 return {
   init: init,
   isReady: function(){ return !!tokenClient; },
   isConnected: function(){ return !!accessToken; },
+  markLocalChange: markLocalChange,
+  pendingCount: function(){ return getPendingTotalCount(); },
   connect: function(){
     requestTokenInteractive();
     startAutoPull();
   },
+  syncNow: syncTick,
   pull: pull,
   push: push,
   pushDebounced: pushDebounced,
   logSale: logSale,
-  logExpense: logExpense
+  logExpense: logExpense,
+  logStock: logStock
 };
 
     })();
@@ -4559,7 +4949,7 @@ return {
       if(btnC) btnC.onclick = function(){ SheetsSync.connect(); };
       // Manual pull should always override local cache & REV checks
       if(btnPull) btnPull.onclick = function(){ SheetsSync.pull(true); };
-      if(btnPush) btnPush.onclick = function(){ SheetsSync.push(); };
+      if(btnPush) btnPush.onclick = function(){ if(SheetsSync.syncNow) SheetsSync.syncNow(); else SheetsSync.push(); };
     }
 
     function init(){
