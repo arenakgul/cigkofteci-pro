@@ -2804,6 +2804,48 @@ var SHEETS_SYNC = {
       }, 2400);
     }
 
+    function getProductSalesQtyMap(branch){
+      var out = {};
+      if(!branch || !Array.isArray(branch.sales)) return out;
+      for(var i=0;i<branch.sales.length;i++){
+        var sale = branch.sales[i];
+        var items = (sale && Array.isArray(sale.items)) ? sale.items : [];
+        for(var j=0;j<items.length;j++){
+          var it = items[j] || {};
+          var key = String(it.id || '');
+          var qty = Number(it.qty) || 0;
+          if(!key || qty <= 0) continue;
+          out[key] = (Number(out[key]) || 0) + qty;
+        }
+      }
+      return out;
+    }
+
+    function sortProductsForPOS(branch, products){
+      var list = Array.isArray(products) ? products.slice() : [];
+      if(list.length <= 1) return list;
+
+      var soldQty = getProductSalesQtyMap(branch);
+      var baseOrder = {};
+      for(var i=0;i<list.length;i++){
+        baseOrder[String(list[i].id || '')] = i;
+      }
+
+      list.sort(function(a, b){
+        var qa = Number(soldQty[String(a.id || '')]) || 0;
+        var qb = Number(soldQty[String(b.id || '')]) || 0;
+        if(qb !== qa) return qb - qa;
+
+        var oa = baseOrder[String(a.id || '')];
+        var ob = baseOrder[String(b.id || '')];
+        if(oa !== ob) return oa - ob;
+
+        return String(a.name || '').localeCompare(String(b.name || ''), 'tr', { sensitivity:'base' });
+      });
+
+      return list;
+    }
+
     function fitProductsToViewport(totalCards){
       var view = document.getElementById('view-pos');
       var panel = view ? view.querySelector('.pos-panel') : null;
@@ -2935,7 +2977,7 @@ var SHEETS_SYNC = {
       };
 
       // Ürünler
-      var prods = branch.products || [];
+      var prods = sortProductsForPOS(branch, branch.products || []);
       var visibleCount = 0;
       html = '';
       for(i=0;i<prods.length;i++){
@@ -3078,10 +3120,13 @@ var SHEETS_SYNC = {
     }
 
     function clearCart(){
-      if(cart.length===0) return;
-      if(!confirm('Sepeti temizlemek istiyor musunuz?')) return;
+      if(cart.length===0){
+        showCartStatus('Sepet zaten boş.');
+        return;
+      }
       cart = [];
       renderCart();
+      showCartStatus('Sepet temizlendi.', 'success');
     }
 
     function checkout(){
