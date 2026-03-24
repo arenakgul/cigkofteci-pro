@@ -1,6 +1,6 @@
 // Simple offline cache for Cig Kofteci Mahsum Usta (GitHub Pages friendly)
 // Bump cache version to publish latest UI and sync updates safely.
-const CACHE = "mahsum-usta-v13";
+const CACHE = "mahsum-usta-v16";
 const ASSETS = ["./", "./index.html", "./sw.js"];
 
 self.addEventListener("install", (e) => {
