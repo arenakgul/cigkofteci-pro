@@ -338,8 +338,8 @@
       align-items:start;
     }
     .pos-panel{
-      display:flex;
-      flex-direction:column;
+      display:grid;
+      grid-template-rows:auto auto minmax(0,1fr);
       min-height:0;
     }
 
@@ -357,7 +357,9 @@
       overscroll-behavior:contain;
       -webkit-overflow-scrolling:touch;
       align-content:start;
+      touch-action:pan-y;
     }
+    .product-grid .product{ touch-action:pan-y; }
     .product-grid .cart-empty{grid-column:1 / -1;}
     .product{
       border:1px solid var(--border);
@@ -565,7 +567,15 @@
 
     /* Responsive */
 
-/* 1360x768 ekranlar için sıkıştırılmış POS görünümü */
+    /* 1360x768 ekranlar için sıkıştırılmış POS görünümü */
+    @media (min-width: 861px){
+      #view-pos .content-grid{
+        grid-template-rows:minmax(0,1fr);
+        align-items:stretch;
+      }
+      .pos-panel{overflow:hidden;}
+    }
+
     @media (min-width: 1200px) and (max-height: 820px){
       .sidebar{ width:250px; padding:14px; }
       .main{ padding:12px; }
@@ -2821,6 +2831,26 @@ var SHEETS_SYNC = {
       var availH = Math.floor(panel.clientHeight - panelPad - titleH - toolsH - 2);
       var availW = Math.floor(grid.clientWidth);
       if(availH < 50 || availW < 90) return;
+
+      var isTouchLike = false;
+      try{
+        isTouchLike =
+          (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
+          ('ontouchstart' in window) ||
+          (navigator && navigator.maxTouchPoints > 0);
+      }catch(e){}
+      if(isTouchLike){
+        var touchGap = 10;
+        var touchMinCardW = (window.innerWidth <= 900) ? 150 : 170;
+        var touchCols = Math.floor((availW + touchGap) / (touchMinCardW + touchGap));
+        touchCols = Math.max(1, Math.min(4, touchCols || 1));
+        grid.style.setProperty('--fit-gap', touchGap + 'px');
+        grid.style.setProperty('--fit-cols', String(touchCols));
+        grid.style.setProperty('--fit-card-h', '94px');
+        grid.classList.remove('compact');
+        grid.classList.remove('ultra-compact');
+        return;
+      }
 
       var gap = 8;
       var minCardW = 96;
