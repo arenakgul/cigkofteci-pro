@@ -352,7 +352,10 @@
       margin-top:10px;
       flex:1;
       min-height:0;
-      overflow:hidden;
+      overflow:auto;
+      overflow-x:hidden;
+      overscroll-behavior:contain;
+      -webkit-overflow-scrolling:touch;
       align-content:start;
     }
     .product-grid .cart-empty{grid-column:1 / -1;}
@@ -465,6 +468,15 @@
     }
     .cart-total{font-size:18px; font-weight:950; color:var(--price);}
     .pay-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;}
+    .cart-status{
+      margin-top:10px;
+      min-height:18px;
+      font-size:12px;
+      font-weight:700;
+      color:var(--muted);
+    }
+    .cart-status.success{color:var(--success);}
+    .cart-status.error{color:var(--danger);}
 
     /* Cards */
     .cards{display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:12px;}
@@ -788,6 +800,7 @@
               <button class="btn btn-danger" type="button" onclick="clearCart()">🧹 Temizle</button>
               <button class="btn btn-primary" type="button" onclick="checkout()">✅ Satışı Kaydet</button>
             </div>
+            <div id="cartStatusMessage" class="cart-status" aria-live="polite"></div>
           </div>
         </div>
       </section>
@@ -2655,6 +2668,7 @@ var SHEETS_SYNC = {
     var activeChannel = (getActiveSalesChannels()[0]) || 'Dükkan İçi';
     var activePayMethod = 'nakit';
     var cart = [];
+    var cartStatusTimer = null;
 
 
     // ====== TIMEZONE SAFE DATEKEY (Europe/Istanbul) ======
@@ -2760,13 +2774,36 @@ var SHEETS_SYNC = {
       };
     }
 
+    function showCartStatus(msg, type){
+      var el = document.getElementById('cartStatusMessage');
+      if(!el) return;
+      if(cartStatusTimer){
+        clearTimeout(cartStatusTimer);
+        cartStatusTimer = null;
+      }
+      var text = String(msg || '').trim();
+      el.textContent = text;
+      el.className = 'cart-status' + (type ? (' ' + type) : '');
+      if(!text) return;
+      cartStatusTimer = setTimeout(function(){
+        var node = document.getElementById('cartStatusMessage');
+        if(!node) return;
+        node.textContent = '';
+        node.className = 'cart-status';
+        cartStatusTimer = null;
+      }, 2400);
+    }
+
     function fitProductsToViewport(totalCards){
       var view = document.getElementById('view-pos');
       var panel = view ? view.querySelector('.pos-panel') : null;
       var grid = document.getElementById('posGrid');
       if(!view || !panel || !grid || !view.classList.contains('active')) return;
 
-      var count = Number(totalCards || 0);
+      var count = Number(totalCards);
+      if(!isFinite(count) || count < 0){
+        count = grid.querySelectorAll('.product').length;
+      }
       if(!count){
         grid.style.setProperty('--fit-cols', '1');
         grid.style.setProperty('--fit-card-h', '88px');
@@ -3065,7 +3102,7 @@ var SHEETS_SYNC = {
       cart = [];
       setVal('deliveryFee','');
       renderPOS();
-      alert('Satış kaydedildi!');
+      showCartStatus('Satış kaydedildi.', 'success');
     }
 
     // ====== DASHBOARD / SALES TABLE ======
